@@ -16,6 +16,9 @@ func ControlRoutes(c <-chan *consul.RoutingTable) {
 	lastFrontends := []string{}
 	for {
 		rt := <-c
+		log.WithField(
+			"consul_index", rt.ConsulIndex,
+		).Info("Change occurred, updating the routing.")
 		currentFrontends := rt.GetFrontendAddresses()
 		for _, f := range difference(lastFrontends, currentFrontends) {
 			if p := proxy.Lookup(f); p != nil {

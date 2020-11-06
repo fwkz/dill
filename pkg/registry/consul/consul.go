@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -13,12 +14,14 @@ import (
 
 func MonitorServices(c chan<- *RoutingTable) {
 	log.Info("Starting service monitor")
+	index := 1
 	for {
-		services, err := fetchHealthyServices()
+		services, newIndex, err := fetchHealthyServices(index)
 		if err != nil {
 			log.WithField("error", err).Warning("Fetching healthy services failed")
 		}
-		rt := &RoutingTable{Table: map[string][]Service{}}
+		index = newIndex
+		rt := &RoutingTable{Table: map[string][]Service{}, ConsulIndex: newIndex}
 		for _, s := range services {
 			details, err := fetchServiceDetails(s)
 			if err != nil {
@@ -31,6 +34,8 @@ func MonitorServices(c chan<- *RoutingTable) {
 			}
 		}
 		c <- rt
+		// TODO: naive rate limiting use something
+		// more resilient like token bucket algorithm
 		time.Sleep(5 * time.Second)
 	}
 }
@@ -45,7 +50,7 @@ type Service struct {
 	Cfg *config.Config
 }
 
-func fetchHealthyServices() ([]string, error) {
+func fetchHealthyServices(index int) ([]string, int, error) {
 	// TODO allow for stale reads
 	req, err := http.NewRequest(
 		"GET",
@@ -53,16 +58,20 @@ func fetchHealthyServices() ([]string, error) {
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, -1, err
 	}
 	q := req.URL.Query()
 	q.Add("filter", "ServiceTags contains `dyntcp`")
+	if index <= 0 {
+		index = 1
+	}
+	q.Add("index", strconv.Itoa(index))
 	req.URL.RawQuery = q.Encode()
 
 	c := &http.Client{}
 	res, err := c.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, -1, err
 	}
 	defer res.Body.Close()
 	data, _ := ioutil.ReadAll(res.Body)
@@ -71,7 +80,7 @@ func fetchHealthyServices() ([]string, error) {
 	}
 	err = json.Unmarshal([]byte(data), &healthyServices)
 	if err != nil {
-		return nil, err
+		return nil, -1, err
 	}
 
 	unique := []string{}
@@ -82,7 +91,15 @@ func fetchHealthyServices() ([]string, error) {
 			unique = append(unique, s.Name)
 		}
 	}
-	return unique, nil
+
+	newIndex, err := strconv.Atoi(res.Header.Get("X-Consul-Index"))
+	if err != nil {
+		newIndex = 1
+	}
+	if newIndex < index {
+		newIndex = 1
+	}
+	return unique, newIndex, nil
 }
 
 func fetchServiceDetails(name string) ([]Service, error) {

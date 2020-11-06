@@ -1,7 +1,8 @@
 package consul
 
 type RoutingTable struct {
-	Table map[string][]Service
+	Table       map[string][]Service
+	ConsulIndex int
 }
 
 func (rt *RoutingTable) Update(service Service) {
