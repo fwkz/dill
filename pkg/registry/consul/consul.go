@@ -2,45 +2,15 @@ package consul
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"time"
-
-	log "github.com/sirupsen/logrus"
 
 	"dyntcp/pkg/config"
 )
 
-func MonitorServices(c chan<- *RoutingTable) {
-	log.Info("Starting service monitor")
-	index := 1
-	for {
-		services, newIndex, err := fetchHealthyServices(index)
-		if err != nil {
-			log.WithField("error", err).Warning("Fetching healthy services failed")
-		}
-		index = newIndex
-		rt := &RoutingTable{Table: map[string][]Service{}, ConsulIndex: newIndex}
-		for _, s := range services {
-			details, err := fetchServiceDetails(s)
-			if err != nil {
-				log.WithFields(
-					log.Fields{"error": err, "service": s},
-				).Warning("Fetching service details for failed")
-			}
-			for _, i := range details {
-				rt.Update(i)
-			}
-		}
-		c <- rt
-		// TODO: naive rate limiting use something
-		// more resilient like token bucket algorithm
-		time.Sleep(5 * time.Second)
-	}
-}
-
-type Service struct {
+type service struct {
 	ID      string   `json:"ID"`
 	Name    string   `json:"Service"`
 	Tags    []string `json:"Tags"`
@@ -48,6 +18,10 @@ type Service struct {
 	Port    int      `json:"Port"`
 
 	Cfg *config.Config
+}
+
+func (s *service) Routing() ([]string, string) {
+	return s.Cfg.FrontendBind, fmt.Sprintf("%s:%d", s.Address, s.Port)
 }
 
 func fetchHealthyServices(index int) ([]string, int, error) {
@@ -102,7 +76,7 @@ func fetchHealthyServices(index int) ([]string, int, error) {
 	return unique, newIndex, nil
 }
 
-func fetchServiceDetails(name string) ([]Service, error) {
+func fetchServiceDetails(name string) ([]service, error) {
 	res, err := http.Get(
 		"http://127.0.0.1:8500/v1/health/service/" + name + "?passing=true",
 	)
@@ -116,13 +90,13 @@ func fetchServiceDetails(name string) ([]Service, error) {
 		Node struct {
 			Address string `json:"Address"`
 		} `json:"Node"`
-		Service Service `json:"Service"`
+		Service service `json:"Service"`
 	}
 	err = json.Unmarshal([]byte(data), &parsed)
 	if err != nil {
 		return nil, err
 	}
-	services := []Service{}
+	services := []service{}
 	for _, r := range parsed {
 		s := r.Service
 		// IP address of the service host — if empty, node address should be used

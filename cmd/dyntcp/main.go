@@ -20,7 +20,7 @@ func main() {
 	log.WithField("count", procs).Info("Setting GOMAXPROCS")
 	runtime.GOMAXPROCS(procs)
 
-	c := make(chan *consul.RoutingTable)
+	c := make(chan *controller.RoutingTable)
 	go consul.MonitorServices(c)
 	controller.ControlRoutes(c)
 }

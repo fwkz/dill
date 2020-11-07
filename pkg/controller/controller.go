@@ -1,17 +1,14 @@
 package controller
 
 import (
-	"fmt"
-
 	log "github.com/sirupsen/logrus"
 
 	"dyntcp/pkg/backend"
 	"dyntcp/pkg/frontend"
 	"dyntcp/pkg/proxy"
-	"dyntcp/pkg/registry/consul"
 )
 
-func ControlRoutes(c <-chan *consul.RoutingTable) {
+func ControlRoutes(c <-chan *RoutingTable) {
 	log.Info("Starting routes controller")
 	lastFrontends := []string{}
 	for {
@@ -26,14 +23,7 @@ func ControlRoutes(c <-chan *consul.RoutingTable) {
 				p.Close()
 			}
 		}
-		for port, services := range rt.Table {
-			upstreams := []string{}
-			for _, s := range services {
-				upstreams = append(
-					upstreams,
-					fmt.Sprintf("%s:%d", s.Address, s.Port),
-				)
-			}
+		for port, upstreams := range rt.Table {
 			if p := proxy.Lookup(port); p == nil {
 				p = proxy.New(
 					frontend.New(port),
