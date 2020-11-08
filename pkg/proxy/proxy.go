@@ -12,7 +12,10 @@ import (
 	"dyntcp/pkg/frontend"
 )
 
-var proxies = make(map[string]*Proxy)
+var (
+	proxies = make(map[string]*Proxy)
+	rwm     sync.RWMutex
+)
 
 var bufferPool = sync.Pool{
 	New: func() interface{} {
@@ -21,19 +24,26 @@ var bufferPool = sync.Pool{
 }
 
 func New(frontend *frontend.Frontend, backend *backend.Backend) *Proxy {
-	p := Proxy{frontend: frontend, backend: backend}
-	proxies[frontend.Address] = &p
-	return &p
+	p := &Proxy{frontend: frontend, backend: backend}
+	rwm.Lock()
+	proxies[frontend.Address] = p
+	rwm.Unlock()
+	return p
 }
 
 func Lookup(listenerAddr string) *Proxy {
-	if p, ok := proxies[listenerAddr]; ok {
+	rwm.RLock()
+	p, ok := proxies[listenerAddr]
+	rwm.RUnlock()
+	if ok {
 		return p
 	}
 	return nil
 }
 
 func CloseProxies() {
+	rwm.RUnlock()
+	defer rwm.RUnlock()
 	for _, p := range proxies {
 		p.Close()
 	}
@@ -55,6 +65,8 @@ func (p *Proxy) ListenAndServe() {
 
 func (p *Proxy) Close() {
 	p.frontend.Shutdown()
+	rwm.Lock()
+	defer rwm.Unlock()
 	delete(proxies, p.frontend.Address)
 }
 
