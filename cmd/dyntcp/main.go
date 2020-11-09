@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"runtime"
 
 	log "github.com/sirupsen/logrus"
@@ -10,9 +11,11 @@ import (
 	"dyntcp/pkg/registry/consul"
 )
 
+var sch <-chan os.Signal
+
 func init() {
 	operations.SetupLogging()
-	operations.SetupCloseHandler()
+	sch = operations.ShutdownChannel()
 }
 
 func main() {
@@ -22,5 +25,5 @@ func main() {
 
 	c := make(chan *controller.RoutingTable)
 	go consul.MonitorServices(c)
-	controller.ControlRoutes(c)
+	controller.ControlRoutes(c, sch)
 }

@@ -41,11 +41,14 @@ func Lookup(listenerAddr string) *Proxy {
 	return nil
 }
 
-func CloseProxies() {
-	rwm.RUnlock()
+// Shutdown gracefully closes proxies, its listeners and all the connections.
+// Should be called ONLY as a way of teardown the application as it doesn't
+// modify `proxies` map.
+func Shutdown() {
+	rwm.RLock()
 	defer rwm.RUnlock()
 	for _, p := range proxies {
-		p.Close()
+		p.frontend.Close()
 	}
 }
 
@@ -64,7 +67,7 @@ func (p *Proxy) ListenAndServe() {
 }
 
 func (p *Proxy) Close() {
-	p.frontend.Shutdown()
+	p.frontend.Close()
 	rwm.Lock()
 	defer rwm.Unlock()
 	delete(proxies, p.frontend.Address)

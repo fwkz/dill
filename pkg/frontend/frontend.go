@@ -27,7 +27,7 @@ func (f *Frontend) Listen() (net.Listener, error) {
 	return l, nil
 }
 
-func (f *Frontend) Shutdown() {
+func (f *Frontend) Close() {
 	log.WithField("address", f.Address).Info("Closing frontend")
 	for _, c := range f.conns {
 		c.Close()

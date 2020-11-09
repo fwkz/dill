@@ -21,7 +21,7 @@ func (rt *RoutingTable) Update(service Service) {
 	}
 }
 
-func (rt *RoutingTable) GetFrontendAddresses() []string {
+func (rt *RoutingTable) FrontendAddresses() []string {
 	addrs := make([]string, len(rt.Table))
 	i := 0
 	for k := range rt.Table {

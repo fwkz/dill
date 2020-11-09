@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"os"
+
 	log "github.com/sirupsen/logrus"
 
 	"dyntcp/pkg/backend"
@@ -8,33 +10,45 @@ import (
 	"dyntcp/pkg/proxy"
 )
 
-func ControlRoutes(c <-chan *RoutingTable) {
+func ControlRoutes(c <-chan *RoutingTable, shutdown <-chan os.Signal) {
 	log.Info("Starting routes controller")
-	lastFrontends := []string{}
+	prt := &RoutingTable{map[string][]string{}, -1}
 	for {
-		rt := <-c
-		log.WithField(
-			"consul_index", rt.ConsulIndex,
-		).Info("Change occurred, updating the routing.")
-		currentFrontends := rt.GetFrontendAddresses()
-		for _, f := range difference(lastFrontends, currentFrontends) {
-			if p := proxy.Lookup(f); p != nil {
-				log.WithField("address", f).Info("No backends for frontend")
-				p.Close()
-			}
+		select {
+		case rt := <-c:
+			updateRouting(rt, prt)
+			prt = rt
+		case <-shutdown:
+			log.Info("Closing routes controller")
+			proxy.Shutdown()
+			return
 		}
-		for port, upstreams := range rt.Table {
-			if p := proxy.Lookup(port); p == nil {
-				p = proxy.New(
-					frontend.New(port),
-					backend.New(upstreams),
-				)
-				go p.ListenAndServe()
-			} else {
-				p.UpdateBackend(upstreams)
-			}
+	}
+}
+
+func updateRouting(routingTable *RoutingTable, previousRoutingTable *RoutingTable) {
+	log.WithField(
+		"consul_index", routingTable.ConsulIndex,
+	).Info("Change occurred, updating the routing.")
+	for _, f := range difference(
+		previousRoutingTable.FrontendAddresses(),
+		routingTable.FrontendAddresses(),
+	) {
+		if p := proxy.Lookup(f); p != nil {
+			log.WithField("address", f).Info("No backends for frontend")
+			p.Close()
 		}
-		lastFrontends = currentFrontends
+	}
+	for port, upstreams := range routingTable.Table {
+		if p := proxy.Lookup(port); p == nil {
+			p = proxy.New(
+				frontend.New(port),
+				backend.New(upstreams),
+			)
+			go p.ListenAndServe()
+		} else {
+			p.UpdateBackend(upstreams)
+		}
 	}
 }
 
