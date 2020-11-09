@@ -13,7 +13,7 @@ func (rt *RoutingTable) Update(service Service) {
 	frontends, upstream := service.Routing()
 	for _, addr := range frontends {
 		if t, ok := rt.Table[addr]; ok {
-			t = append(t)
+			t = append(t, addr)
 			rt.Table[addr] = t
 		} else {
 			rt.Table[addr] = []string{upstream}
