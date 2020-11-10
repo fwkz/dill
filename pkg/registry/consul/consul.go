@@ -6,8 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-
-	"dyntcp/pkg/config"
+	"strings"
 )
 
 type service struct {
@@ -16,12 +15,17 @@ type service struct {
 	Tags    []string `json:"Tags"`
 	Address string   `json:"Address"`
 	Port    int      `json:"Port"`
-
-	Cfg *config.Config
 }
 
 func (s *service) Routing() ([]string, string) {
-	return s.Cfg.FrontendBind, fmt.Sprintf("%s:%d", s.Address, s.Port)
+	frontendBinds := []string{}
+	for _, t := range s.Tags {
+		if strings.HasPrefix(t, "dyntcp.frontend.bind=") {
+			v := strings.Split(t, "=")
+			frontendBinds = append(frontendBinds, v[1])
+		}
+	}
+	return frontendBinds, fmt.Sprintf("%s:%d", s.Address, s.Port)
 }
 
 func fetchHealthyServices(index int) ([]string, int, error) {
@@ -104,7 +108,6 @@ func fetchServiceDetails(name string) ([]service, error) {
 		if s.Address == "" {
 			s.Address = r.Node.Address
 		}
-		s.Cfg = config.NewFromTags(s.Tags)
 		services = append(services, s)
 	}
 	return services, nil
