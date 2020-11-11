@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/spf13/viper"
 )
 
 type service struct {
@@ -32,7 +34,7 @@ func fetchHealthyServices(index int) ([]string, int, error) {
 	// TODO allow for stale reads
 	req, err := http.NewRequest(
 		"GET",
-		"http://127.0.0.1:8500/v1/health/state/passing",
+		viper.GetString("consul.addr")+"/v1/health/state/passing",
 		nil,
 	)
 	if err != nil {
@@ -82,7 +84,11 @@ func fetchHealthyServices(index int) ([]string, int, error) {
 
 func fetchServiceDetails(name string) ([]service, error) {
 	res, err := http.Get(
-		"http://127.0.0.1:8500/v1/health/service/" + name + "?passing=true",
+		fmt.Sprintf(
+			"%s/v1/health/service/%s?passing=true",
+			viper.GetString("consul.addr"),
+			name,
+		),
 	)
 	if err != nil {
 		return nil, err
