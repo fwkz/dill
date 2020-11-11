@@ -13,7 +13,7 @@ import (
 
 type service struct {
 	ID      string   `json:"ID"`
-	Name    string   `json:"Service"`
+	Name_   string   `json:"Service"`
 	Tags    []string `json:"Tags"`
 	Address string   `json:"Address"`
 	Port    int      `json:"Port"`
@@ -28,6 +28,10 @@ func (s *service) Routing() ([]string, string) {
 		}
 	}
 	return frontendBinds, fmt.Sprintf("%s:%d", s.Address, s.Port)
+}
+
+func (s *service) Name() string {
+	return s.Name_
 }
 
 func fetchHealthyServices(index int) ([]string, int, error) {
