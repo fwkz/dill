@@ -60,7 +60,7 @@ type Proxy struct {
 func (p *Proxy) ListenAndServe() {
 	l, err := p.frontend.Listen()
 	if err != nil {
-		log.Warning("Can't establish frontend listener: %s", err)
+		log.WithField("error", err).Warning("Can't establish frontend listener")
 		return
 	}
 	p.serve(l)
