@@ -20,14 +20,14 @@ type service struct {
 }
 
 func (s *service) Routing() ([]string, string) {
-	frontendBinds := []string{}
+	listeners := []string{}
 	for _, t := range s.Tags {
-		if strings.HasPrefix(t, "dyntcp.frontend.bind=") {
+		if strings.HasPrefix(t, "dyntcp.listener=") {
 			v := strings.Split(t, "=")
-			frontendBinds = append(frontendBinds, v[1])
+			listeners = append(listeners, v[1])
 		}
 	}
-	return frontendBinds, fmt.Sprintf("%s:%d", s.Address, s.Port)
+	return listeners, fmt.Sprintf("%s:%d", s.Address, s.Port)
 }
 
 func (s *service) Name() string {

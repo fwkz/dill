@@ -22,8 +22,8 @@ type RoutingTable struct {
 // Update validates the service's routing settings
 // and updates routing table if it's valid.
 func (rt *RoutingTable) Update(service Service) {
-	frontends, upstream := service.Routing()
-	for _, addr := range frontends {
+	listeners, upstream := service.Routing()
+	for _, addr := range listeners {
 		a := strings.Split(addr, ":")
 		if len(a) != 2 {
 			log.WithFields(log.Fields{
