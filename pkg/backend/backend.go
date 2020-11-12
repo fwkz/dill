@@ -18,14 +18,15 @@ type Backend struct {
 
 func (b *Backend) Select() string {
 	b.rwm.RLock()
-	defer b.rwm.RUnlock()
-	return b.strategy.Select(&b.upstreams)
+	u := b.strategy.Select(&b.upstreams)
+	b.rwm.RUnlock()
+	return u
 }
 
 func (b *Backend) SetUpstreams(upstreams []string) {
 	b.rwm.Lock()
-	defer b.rwm.Unlock()
 	b.upstreams = upstreams
+	b.rwm.Unlock()
 }
 
 func (b *Backend) Dump() string {

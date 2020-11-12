@@ -47,10 +47,10 @@ func Lookup(listenerAddr string) *Proxy {
 // modify `proxies` map.
 func Shutdown() {
 	rwm.RLock()
-	defer rwm.RUnlock()
 	for _, p := range proxies {
 		p.frontend.Close()
 	}
+	rwm.RUnlock()
 }
 
 type Proxy struct {
@@ -70,8 +70,8 @@ func (p *Proxy) ListenAndServe() {
 func (p *Proxy) Close() {
 	p.frontend.Close()
 	rwm.Lock()
-	defer rwm.Unlock()
 	delete(proxies, p.frontend.Address)
+	rwm.Unlock()
 }
 
 func (p *Proxy) UpdateBackend(upstreams []string) {
