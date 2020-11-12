@@ -3,6 +3,7 @@ package proxy
 import (
 	"io"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -123,4 +124,16 @@ func (p *Proxy) handle(in net.Conn) {
 	}
 	go cp(in, out)
 	cp(out, in)
+}
+
+func Dump() string {
+	var bd strings.Builder
+	rwm.RLock()
+	for addr, p := range proxies {
+		bd.WriteString(addr)
+		bd.WriteString("\n")
+		bd.WriteString(p.backend.Dump())
+	}
+	rwm.RUnlock()
+	return bd.String()
 }

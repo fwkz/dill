@@ -16,6 +16,7 @@ func SetupConfig() {
 	viper.SetDefault("gomaxprocs", runtime.NumCPU())
 	viper.SetDefault("ports.min", 1024)
 	viper.SetDefault("ports.max", 49151)
+	viper.SetDefault("peek_listener", "")
 
 	viper.SetDefault("allowed_listeners", "local://127.0.0.1,any://0.0.0.0")
 	allowedListeners := make(map[string]string)

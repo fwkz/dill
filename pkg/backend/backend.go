@@ -1,6 +1,9 @@
 package backend
 
-import "sync"
+import (
+	"strings"
+	"sync"
+)
 
 func New(upstreams []string) *Backend {
 	b := Backend{upstreams: upstreams, strategy: &roundrobin{}}
@@ -23,4 +26,19 @@ func (b *Backend) SetUpstreams(upstreams []string) {
 	b.rwm.Lock()
 	defer b.rwm.Unlock()
 	b.upstreams = upstreams
+}
+
+func (b *Backend) Dump() string {
+	var bd strings.Builder
+	bd.WriteString("  | ")
+	bd.WriteString(b.strategy.Name())
+	bd.WriteString("\n")
+	b.rwm.RLock()
+	for _, u := range b.upstreams {
+		bd.WriteString("  |--> ")
+		bd.WriteString(u)
+		bd.WriteString("\n")
+	}
+	b.rwm.RUnlock()
+	return bd.String()
 }

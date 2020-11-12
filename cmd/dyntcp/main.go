@@ -25,6 +25,10 @@ func main() {
 	log.WithField("count", procs).Info("Setting GOMAXPROCS")
 	runtime.GOMAXPROCS(procs)
 
+	l := viper.GetString("peek_listener")
+	if l != "" {
+		go operations.Peek(l)
+	}
 	c := make(chan *controller.RoutingTable)
 	go consul.MonitorServices(c)
 	controller.ControlRoutes(c, sch)

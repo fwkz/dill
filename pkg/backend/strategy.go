@@ -8,6 +8,7 @@ import (
 
 type strategy interface {
 	Select(*[]string) string
+	Name() string
 }
 
 type roundrobin struct {
@@ -19,10 +20,18 @@ func (r *roundrobin) Select(upstreams *[]string) string {
 	return (*upstreams)[(int(n)-1)%len(*upstreams)]
 }
 
+func (r *roundrobin) Name() string {
+	return "round_robin"
+}
+
 type random struct {
 }
 
 func (r *random) Select(upstreams *[]string) string {
 	rand.Seed(time.Now().UnixNano())
 	return (*upstreams)[rand.Intn(len(*upstreams))]
+}
+
+func (r *random) Name() string {
+	return "random"
 }
