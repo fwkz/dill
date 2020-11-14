@@ -31,12 +31,12 @@ func (b *Backend) SetUpstreams(upstreams []string) {
 
 func (b *Backend) Dump() string {
 	var bd strings.Builder
-	bd.WriteString("  | ")
+	bd.WriteString("  ├ ")
 	bd.WriteString(b.strategy.Name())
 	bd.WriteString("\n")
 	b.rwm.RLock()
 	for _, u := range b.upstreams {
-		bd.WriteString("  |--> ")
+		bd.WriteString("  ├──➤ ")
 		bd.WriteString(u)
 		bd.WriteString("\n")
 	}
