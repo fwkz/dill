@@ -2,7 +2,6 @@ package operations
 
 import (
 	"runtime"
-	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -16,12 +15,8 @@ func SetupConfig() {
 	viper.SetDefault("ports_min", 1024)
 	viper.SetDefault("ports_max", 49151)
 	viper.SetDefault("peek_listener", "")
-
-	viper.SetDefault("allowed_listeners", "local://127.0.0.1,any://0.0.0.0")
-	allowedListeners := make(map[string]string)
-	for _, l := range strings.Split(viper.GetString("allowed_listeners"), ",") {
-		elements := strings.Split(l, "://")
-		allowedListeners[elements[0]] = elements[1]
-	}
-	viper.Set("allowed_listeners", allowedListeners)
+	viper.SetDefault(
+		"allowed_listeners",
+		map[string]string{"local": "127.0.0.1", "any": "0.0.0.0"},
+	)
 }
