@@ -43,8 +43,8 @@ func (rt *RoutingTable) Update(service Service) {
 		}
 		label, port := a[0], a[1]
 
-		if p, err := strconv.Atoi(port); p <= viper.GetInt("ports.min") ||
-			p >= viper.GetInt("ports.max") ||
+		if p, err := strconv.Atoi(port); p <= viper.GetInt("ports_min") ||
+			p >= viper.GetInt("ports_max") ||
 			err != nil {
 			log.WithFields(log.Fields{
 				"port":         port,
