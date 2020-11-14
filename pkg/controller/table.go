@@ -23,6 +23,14 @@ type RoutingTable struct {
 // and updates routing table if it's valid.
 func (rt *RoutingTable) Update(service Service) {
 	listeners, upstream := service.Routing()
+	if len(listeners) == 0 {
+		log.WithFields(log.Fields{
+			"service_name": service.Name(),
+			"upstream":     upstream,
+		}).Warn("No listeners found")
+		return
+	}
+
 	for _, addr := range listeners {
 		a := strings.Split(addr, ":")
 		if len(a) != 2 {
