@@ -43,8 +43,8 @@ func (rt *RoutingTable) Update(service Service) {
 		}
 		label, port := a[0], a[1]
 
-		if p, err := strconv.Atoi(port); p <= viper.GetInt("ports_min") ||
-			p >= viper.GetInt("ports_max") ||
+		if p, err := strconv.Atoi(port); p <= viper.GetInt("listeners.ports_min") ||
+			p >= viper.GetInt("listeners.ports_max") ||
 			err != nil {
 			log.WithFields(log.Fields{
 				"port":         port,
@@ -54,7 +54,7 @@ func (rt *RoutingTable) Update(service Service) {
 			continue
 		}
 
-		allowedListeners := viper.GetStringMapString("allowed_listeners")
+		allowedListeners := viper.GetStringMapString("listeners.allowed")
 		labelValid := false
 		for l, ip := range allowedListeners {
 			if label == l {

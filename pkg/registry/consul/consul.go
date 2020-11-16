@@ -38,7 +38,7 @@ func fetchHealthyServices(index int) ([]string, int, error) {
 	// TODO allow for stale reads
 	req, err := http.NewRequest(
 		"GET",
-		viper.GetString("consul_addr")+"/v1/health/state/passing",
+		viper.GetString("consul.address")+"/v1/health/state/passing",
 		nil,
 	)
 	if err != nil {
@@ -90,7 +90,7 @@ func fetchServiceDetails(name string) ([]service, error) {
 	res, err := http.Get(
 		fmt.Sprintf(
 			"%s/v1/health/service/%s?passing=true",
-			viper.GetString("consul_addr"),
+			viper.GetString("consul.address"),
 			name,
 		),
 	)

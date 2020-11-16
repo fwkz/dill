@@ -21,11 +21,11 @@ func init() {
 }
 
 func main() {
-	procs := viper.GetInt("gomaxprocs")
+	procs := viper.GetInt("runtime.gomaxprocs")
 	log.WithField("count", procs).Info("Setting GOMAXPROCS")
 	runtime.GOMAXPROCS(procs)
 
-	l := viper.GetString("peek_listener")
+	l := viper.GetString("peek.listener")
 	if l != "" {
 		go operations.Peek(l)
 	}
