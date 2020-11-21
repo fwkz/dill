@@ -25,7 +25,7 @@ var bufferPool = sync.Pool{
 }
 
 func New(frontend *frontend.Frontend, backend *backend.Backend) *Proxy {
-	p := &Proxy{frontend: frontend, backend: backend}
+	p := &Proxy{frontend: frontend, backend: backend, quit: make(chan struct{})}
 	rwm.Lock()
 	proxies[frontend.Address] = p
 	rwm.Unlock()
@@ -46,7 +46,9 @@ func Lookup(listenerAddr string) *Proxy {
 func Shutdown() {
 	rwm.Lock()
 	for _, p := range proxies {
+		close(p.quit)
 		p.frontend.Close()
+		p.wg.Wait()
 	}
 	proxies = make(map[string]*Proxy)
 	rwm.Unlock()
@@ -55,19 +57,33 @@ func Shutdown() {
 type Proxy struct {
 	frontend *frontend.Frontend
 	backend  *backend.Backend
+	quit     chan struct{}
+	wg       sync.WaitGroup
 }
 
 func (p *Proxy) ListenAndServe() {
-	l, err := p.frontend.Listen()
+	err := p.frontend.Listen()
 	if err != nil {
 		log.WithField("error", err).Warning("Can't establish frontend listener")
 		return
 	}
-	p.serve(l)
+	p.wg.Add(1)
+	go func() {
+		err := p.serve()
+		if err != nil {
+			log.WithFields(
+				log.Fields{"error": err, "listener": p.frontend.Address},
+			).Error("Can't serve requests")
+		}
+		p.wg.Done()
+	}()
 }
 
 func (p *Proxy) Close() {
+	close(p.quit)
 	p.frontend.Close()
+	p.wg.Wait()
+
 	rwm.Lock()
 	delete(proxies, p.frontend.Address)
 	rwm.Unlock()
@@ -77,30 +93,27 @@ func (p *Proxy) UpdateBackend(upstreams []string) {
 	p.backend.SetUpstreams(upstreams)
 }
 
-func (p *Proxy) serve(l net.Listener) error {
-	defer l.Close()
-	var delay time.Duration
+func (p *Proxy) serve() error {
 	for {
-		c, err := l.Accept()
+		c, err := p.frontend.Accept()
 		if err != nil {
-			if ne, ok := err.(net.Error); ok && ne.Temporary() {
-				if delay == 0 {
-					delay = 5 * time.Millisecond
-				} else {
-					delay *= 2
-					if delay > time.Second {
-						delay = time.Second
-					}
+			select {
+			case <-p.quit:
+				return nil
+			default:
+				if ne, ok := err.(net.Error); ok && ne.Temporary() {
+					time.Sleep(50 * time.Millisecond)
+					continue
 				}
-				time.Sleep(delay)
-				continue
+				return err
 			}
-			return err
 		}
-		delay = 0
-		go p.handle(c)
+		p.wg.Add(1)
+		go func() {
+			p.handle(c)
+			p.wg.Done()
+		}()
 	}
-
 }
 
 func (p *Proxy) handle(in net.Conn) {

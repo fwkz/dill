@@ -45,7 +45,7 @@ func updateRouting(routingTable *RoutingTable, previousRoutingTable *RoutingTabl
 				frontend.New(port),
 				backend.New(upstreams),
 			)
-			go p.ListenAndServe()
+			p.ListenAndServe()
 		} else {
 			p.UpdateBackend(upstreams)
 		}

@@ -17,14 +17,14 @@ type Frontend struct {
 	conns    []net.Conn
 }
 
-func (f *Frontend) Listen() (net.Listener, error) {
+func (f *Frontend) Listen() error {
 	log.WithField("address", f.Address).Info("Frontend is starting to listen")
 	l, err := net.Listen("tcp", f.Address)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	f.listener = l
-	return l, nil
+	return nil
 }
 
 func (f *Frontend) Close() {
@@ -35,4 +35,8 @@ func (f *Frontend) Close() {
 	if f.listener != nil {
 		f.listener.Close()
 	}
+}
+
+func (f *Frontend) Accept() (net.Conn, error) {
+	return f.listener.Accept()
 }
