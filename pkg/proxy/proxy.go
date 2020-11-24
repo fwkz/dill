@@ -110,14 +110,15 @@ func (p *Proxy) serve() error {
 		}
 		p.wg.Add(1)
 		go func() {
-			p.handle(c)
+			p.handle(c, p.backend.Select())
+			p.frontend.RemoveConn(c)
 			p.wg.Done()
 		}()
 	}
 }
 
-func (p *Proxy) handle(in net.Conn) {
-	out, err := net.Dial("tcp", p.backend.Select())
+func (p *Proxy) handle(in net.Conn, upstreamAddr string) {
+	out, err := net.Dial("tcp", upstreamAddr)
 	if err != nil {
 		in.Close()
 		return
