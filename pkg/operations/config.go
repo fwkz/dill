@@ -23,9 +23,9 @@ func SetupConfig() {
 
 	viper.SetDefault("consul.address", "http://127.0.0.1:8500")
 	viper.SetDefault("runtime.gomaxprocs", runtime.NumCPU())
+	viper.SetDefault("peek.listener", "")
 	viper.SetDefault("listeners.port_min", 1024)
 	viper.SetDefault("listeners.port_max", 49151)
-	viper.SetDefault("peek.listener", "")
 	viper.SetDefault(
 		"listeners.allowed",
 		map[string]string{"local": "127.0.0.1", "any": "0.0.0.0"},
