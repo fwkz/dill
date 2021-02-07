@@ -24,3 +24,7 @@ release: $(PLATFORMS)
 
 $(PLATFORMS): mkdistdir clean fmt
 	GOOS=$(os) GOARCH=$(arch) go build -o $(OUTPUT_BINARY)-$(os)-$(arch) $(PWD)/cmd/dyntcp/main.go
+
+.PHONY: dyntcp
+dyntcp: build
+	./bin/dyntcp -config config.toml

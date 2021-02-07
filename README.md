@@ -75,6 +75,8 @@ $ nc 127.0.0.1 2323
 ```
 #### runtime.gomaxprocs `integer`
 Value of Go's `runtime.GOMAXPROCS()`
+
+_default: equals to `runtime.NumCPU()`_
 ### Formats
 Configuration is powered by [Viper](https://github.com/spf13/viper) so it's possible to use format that suits you best.
 
