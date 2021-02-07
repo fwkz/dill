@@ -18,7 +18,6 @@ Exposing dynamic backends on the static frontend is the bread-and-butter of any 
       "dyntcp",
       "dyntcp.listener=local:5555",
     ],
-    # ...
   }
 }
 ```
@@ -43,8 +42,8 @@ Interface addresses that are allowed to be bind to by upstream services. Address
 Imagine that a machine hosting `dyntcp` has two interfaces, one is internal (192.168.10.10) and the other is external (12.42.22.65). You might want to use the following setup 
 ```toml
 [listeners.allowed]
-internal = 192.168.10.10
-public = 12.42.22.65
+internal = "192.168.10.10"
+public = "12.42.22.65"
 ```
 with such configuration, upstream services that want to be accessible on `12.42.22.65:5555` can use the `public` listener in Consul tags `dyntcp.listener=public:5555`. 
 #### listeners.port_min `integer`
