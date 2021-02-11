@@ -1,4 +1,4 @@
-module dyntcp
+module dill
 
 go 1.15
 

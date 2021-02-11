@@ -2,10 +2,10 @@
 
 PLATFORMS := darwin/amd64 linux/amd64
 DIST_DIR := $(PWD)/bin
-OUTPUT_BINARY := $(DIST_DIR)/dyntcp
+OUTPUT_BINARY := $(DIST_DIR)/dill
 
 build: mkdistdir clean fmt
-	go build -o $(OUTPUT_BINARY) $(PWD)/cmd/dyntcp/main.go
+	go build -o $(OUTPUT_BINARY) $(PWD)/cmd/dill/main.go
 
 fmt:
 	gofmt -s -w $(PWD)
@@ -23,8 +23,8 @@ arch = $(word 2, $(temp))
 release: $(PLATFORMS)
 
 $(PLATFORMS): mkdistdir clean fmt
-	GOOS=$(os) GOARCH=$(arch) go build -o $(OUTPUT_BINARY)-$(os)-$(arch) $(PWD)/cmd/dyntcp/main.go
+	GOOS=$(os) GOARCH=$(arch) go build -o $(OUTPUT_BINARY)-$(os)-$(arch) $(PWD)/cmd/dill/main.go
 
-.PHONY: dyntcp
-dyntcp: build
-	./bin/dyntcp -config config.toml
+.PHONY: dill
+dill: build
+	./bin/dill -config config.toml

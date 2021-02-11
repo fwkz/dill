@@ -1,4 +1,4 @@
-# dyntcp
+# dill
 Dynamic Listener TCP Proxy integrated with Hashicorp Consul.
 
 ## Motivation
@@ -8,46 +8,46 @@ Exposing dynamic backends on the static frontend is the bread-and-butter of any 
 
 
 ## Routing
-`dyntcp` is building its routing table based on services registered in `Consul`. All you need to do in order to expose Consul registered service in `dyntcp` instace is to add appropriate tags.
-* `dyntcp` tag registers service and its updates with `dyntcp` instance.
-* `dyntcp.listener` binds, based on predefined listeners declared by `listeners.allowed`, service to specific address and port.
+`dill` is building its routing table based on services registered in `Consul`. All you need to do in order to expose Consul registered service in `dill` instace is to add appropriate tags.
+* `dill` tag registers service and its updates with `dill` instance.
+* `dill.listener` binds, based on predefined listeners declared by `listeners.allowed`, service to specific address and port.
 ```json
 {
   "service": {
     "tags": [
-      "dyntcp",
-      "dyntcp.listener=local:5555",
+      "dill",
+      "dill.listener=local:5555",
     ],
   }
 }
 ```
 
 ## Configuration
-`dyntcp` already comes with sane defaults but you can adjust its behaviour providing configuration file 
+`dill` already comes with sane defaults but you can adjust its behaviour providing configuration file 
 ```bash
-$ dyntcp -c config.toml
+$ dill -c config.toml
 ``` 
 or use environment variables
 ```bash
-$ export DYNTCP_CONSUL_ADDRESS="http://127.0.0.1:8500"
-$ DYNTCP_LISTENERS_PORT_MIN=1234 dyntcp
+$ export DILL_CONSUL_ADDRESS="http://127.0.0.1:8500"
+$ DILL_LISTENERS_PORT_MIN=1234 dill
 ``` 
 
 ### Values
 #### consul.address `string`
-Consul address from which `dyntcp` will fetch the updates and build the routing table.`
+Consul address from which `dill` will fetch the updates and build the routing table.`
 
 _default: `http://127.0.0.1:8500`_
 #### listeners.allowed `map`
-Interface addresses that are allowed to be bind to by upstream services. Address labels (keys in the map) are opaque for `dyntcp`. 
+Interface addresses that are allowed to be bind to by upstream services. Address labels (keys in the map) are opaque for `dill`. 
 
-Imagine that a machine hosting `dyntcp` has two interfaces, one is internal (192.168.10.10) and the other is external (12.42.22.65). You might want to use the following setup 
+Imagine that a machine hosting `dill` has two interfaces, one is internal (192.168.10.10) and the other is external (12.42.22.65). You might want to use the following setup 
 ```toml
 [listeners.allowed]
 internal = "192.168.10.10"
 public = "12.42.22.65"
 ```
-with such configuration, upstream services that want to be accessible on `12.42.22.65:5555` can use the `public` listener in Consul tags `dyntcp.listener=public:5555`. 
+with such configuration, upstream services that want to be accessible on `12.42.22.65:5555` can use the `public` listener in Consul tags `dill.listener=public:5555`. 
 
 _default: `{"local": "127.0.0.1", "any": "0.0.0.0"}`_
 #### listeners.port_min `integer`
@@ -59,7 +59,7 @@ Maximum port value at which it will be allowed to expose upstream services. Back
 
 _default: `49151`_
 #### peek.listener `string`
-Address on which `Peek` will be exposed. `Peek` is a TCP debug server spawned alongside the `dyntcp`. Connecting to it will return the current state of the routing table. By default `Peek` is turned off.
+Address on which `Peek` will be exposed. `Peek` is a TCP debug server spawned alongside the `dill`. Connecting to it will return the current state of the routing table. By default `Peek` is turned off.
 
 _default: `""`_
 ```
@@ -82,7 +82,7 @@ Configuration is powered by [Viper](https://github.com/spf13/viper) so it's poss
 
 > reading from JSON, TOML, YAML, HCL, envfile and Java properties config files
 
-`dyntcp` uses the following precedence order:
+`dill` uses the following precedence order:
   * environment variable
   * config file
   * default value
@@ -148,10 +148,10 @@ runtime:
 }
 ```
 #### Environment variables
-Variables should be prefixed with `DYNTCP` and delimited with underscore e.g. `consul.address` becomes `DYNTCP_CONSUL_ADDRESS`. 
+Variables should be prefixed with `DILL` and delimited with underscore e.g. `consul.address` becomes `DILL_CONSUL_ADDRESS`. 
 ```bash
-$ export DYNTCP_CONSUL_ADDRESS="http://127.0.0.1:8500"
-$ DYNTCP_LISTENERS_PORT_MIN=1234 dyntcp
+$ export DILL_CONSUL_ADDRESS="http://127.0.0.1:8500"
+$ DILL_LISTENERS_PORT_MIN=1234 dill
 ``` 
 
 ## Project status

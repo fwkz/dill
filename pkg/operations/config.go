@@ -17,7 +17,7 @@ func init() {
 }
 
 func SetupConfig() {
-	viper.SetEnvPrefix("dyntcp")
+	viper.SetEnvPrefix("dill")
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 

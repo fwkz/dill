@@ -9,8 +9,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"dyntcp/pkg/backend"
-	"dyntcp/pkg/frontend"
+	"dill/pkg/backend"
+	"dill/pkg/frontend"
 )
 
 var (

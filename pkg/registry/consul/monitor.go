@@ -5,7 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"dyntcp/pkg/controller"
+	"dill/pkg/controller"
 )
 
 func MonitorServices(c chan<- *controller.RoutingTable) {

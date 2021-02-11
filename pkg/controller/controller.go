@@ -5,9 +5,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"dyntcp/pkg/backend"
-	"dyntcp/pkg/frontend"
-	"dyntcp/pkg/proxy"
+	"dill/pkg/backend"
+	"dill/pkg/frontend"
+	"dill/pkg/proxy"
 )
 
 func ControlRoutes(c <-chan *RoutingTable, shutdown <-chan os.Signal) {

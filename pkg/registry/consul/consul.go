@@ -22,7 +22,7 @@ type service struct {
 func (s *service) Routing() ([]string, string) {
 	listeners := []string{}
 	for _, t := range s.Tags {
-		if strings.HasPrefix(t, "dyntcp.listener=") {
+		if strings.HasPrefix(t, "dill.listener=") {
 			v := strings.Split(t, "=")
 			listeners = append(listeners, v[1])
 		}
@@ -45,7 +45,7 @@ func fetchHealthyServices(index int) ([]string, int, error) {
 		return nil, -1, err
 	}
 	q := req.URL.Query()
-	q.Add("filter", "ServiceTags contains `dyntcp`")
+	q.Add("filter", "ServiceTags contains `dill`")
 	if index <= 0 {
 		index = 1
 	}

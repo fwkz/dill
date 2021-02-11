@@ -5,7 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"dyntcp/pkg/proxy"
+	"dill/pkg/proxy"
 )
 
 func Peek(addr string) {
@@ -21,7 +21,13 @@ func Peek(addr string) {
 			log.WithField("error", err).Warning("Failed to accept a connection")
 			continue
 		}
-		c.Write([]byte(proxy.Dump()))
+
+		d := proxy.Dump()
+		if d == "" {
+			d = "No registered backends. Please verify services' configuration.\n"
+		}
+
+		c.Write([]byte(d))
 		c.Close()
 	}
 }

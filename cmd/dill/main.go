@@ -7,9 +7,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"dyntcp/pkg/controller"
-	"dyntcp/pkg/operations"
-	"dyntcp/pkg/registry/consul"
+	"dill/pkg/controller"
+	"dill/pkg/operations"
+	"dill/pkg/registry/consul"
 )
 
 var sch <-chan os.Signal
