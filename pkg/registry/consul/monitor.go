@@ -24,6 +24,7 @@ func MonitorServices(c chan<- *controller.RoutingTable) {
 				log.WithFields(
 					log.Fields{"error": err, "service": s},
 				).Warning("Fetching service details for failed")
+				continue
 			}
 			for _, i := range details {
 				rt.Update(&i)
