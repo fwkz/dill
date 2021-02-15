@@ -52,7 +52,7 @@ func (f *Frontend) Accept() (net.Conn, error) {
 	f.conns[c.RemoteAddr().String()] = c
 	f.rwm.Unlock()
 
-	return c, err
+	return c, nil
 }
 
 func (f *Frontend) RemoveConn(c net.Conn) {
