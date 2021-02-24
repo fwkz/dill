@@ -15,6 +15,7 @@ func MonitorServices(c chan<- *controller.RoutingTable) {
 		services, newIndex, err := fetchHealthyServices(index)
 		if err != nil {
 			log.WithField("error", err).Warning("Fetching healthy services failed")
+			continue
 		}
 		index = newIndex
 		rt := &controller.RoutingTable{Table: map[string][]string{}, ConsulIndex: newIndex}
