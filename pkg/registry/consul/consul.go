@@ -42,7 +42,7 @@ func fetchHealthyServices(index int) ([]string, int, error) {
 		nil,
 	)
 	if err != nil {
-		return nil, -1, err
+		return nil, 0, err
 	}
 	q := req.URL.Query()
 	q.Add("filter", "ServiceTags contains `dill`")
@@ -55,7 +55,7 @@ func fetchHealthyServices(index int) ([]string, int, error) {
 	c := &http.Client{}
 	res, err := c.Do(req)
 	if err != nil {
-		return nil, -1, err
+		return nil, 0, err
 	}
 	defer res.Body.Close()
 	data, _ := ioutil.ReadAll(res.Body)
@@ -64,7 +64,7 @@ func fetchHealthyServices(index int) ([]string, int, error) {
 	}
 	err = json.Unmarshal([]byte(data), &healthyServices)
 	if err != nil {
-		return nil, -1, err
+		return nil, 0, err
 	}
 
 	unique := []string{}
@@ -77,10 +77,7 @@ func fetchHealthyServices(index int) ([]string, int, error) {
 	}
 
 	newIndex, err := strconv.Atoi(res.Header.Get("X-Consul-Index"))
-	if err != nil {
-		newIndex = 1
-	}
-	if newIndex < index {
+	if err != nil || newIndex < index || newIndex < 0 {
 		newIndex = 1
 	}
 	return unique, newIndex, nil
