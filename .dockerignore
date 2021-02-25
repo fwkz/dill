@@ -1,0 +1,9 @@
+bin/
+.idea/
+.git/
+.gitignore
+.dockerignore
+Makefile
+LICENSE
+README.md
+Dockerfile
