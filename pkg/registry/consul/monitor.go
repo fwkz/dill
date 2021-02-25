@@ -8,6 +8,8 @@ import (
 	"dill/pkg/controller"
 )
 
+var waitTime time.Duration = 5 * time.Second
+
 func MonitorServices(c chan<- *controller.RoutingTable) {
 	log.Info("Starting service monitor")
 	index := 1
@@ -15,6 +17,7 @@ func MonitorServices(c chan<- *controller.RoutingTable) {
 		services, newIndex, err := fetchHealthyServices(index)
 		if err != nil {
 			log.WithField("error", err).Warning("Fetching healthy services failed")
+			time.Sleep(waitTime)
 			continue
 		}
 		index = newIndex
@@ -34,6 +37,6 @@ func MonitorServices(c chan<- *controller.RoutingTable) {
 		c <- rt
 		// TODO: naive rate limiting use something
 		// more resilient like token bucket algorithm
-		time.Sleep(5 * time.Second)
+		time.Sleep(waitTime)
 	}
 }
