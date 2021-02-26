@@ -10,6 +10,7 @@ import (
 
 var waitTime time.Duration = 5 * time.Second
 
+// MonitorServices fetches healthy services that was tagged as `dill`
 func MonitorServices(c chan<- *controller.RoutingTable) {
 	log.Info("Starting service monitor")
 	index := 1
@@ -27,7 +28,7 @@ func MonitorServices(c chan<- *controller.RoutingTable) {
 			if err != nil {
 				log.WithFields(
 					log.Fields{"error": err, "service": s},
-				).Warning("Fetching service details for failed")
+				).Warning("Fetching service details failed")
 				continue
 			}
 			for _, i := range details {

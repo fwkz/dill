@@ -10,9 +10,11 @@ import (
 	"dill/pkg/proxy"
 )
 
+// ControlRoutes waits for a new version of the routing table,
+// compares it with previous version and apply approriate changes.
 func ControlRoutes(c <-chan *RoutingTable, shutdown <-chan os.Signal) {
 	log.Info("Starting routes controller")
-	prt := &RoutingTable{map[string][]string{}, -1}
+	prt := &RoutingTable{map[string][]string{}, 1}
 	for {
 		select {
 		case rt := <-c:
