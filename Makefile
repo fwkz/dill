@@ -1,8 +1,8 @@
-.PHONY: build fmt mkdistdir clean release $(PLATFORMS) 
-
+.PHONY: build fmt mkdistdir clean image release $(PLATFORMS) 
+VERSION := $(shell git describe --tags)
 PLATFORMS := darwin/amd64 linux/amd64
 DIST_DIR := $(PWD)/bin
-OUTPUT_BINARY := $(DIST_DIR)/dill
+OUTPUT_BINARY := $(DIST_DIR)/dill-$(VERSION)
 
 build: mkdistdir clean fmt
 	go build -o $(OUTPUT_BINARY) $(PWD)/cmd/dill/main.go
@@ -15,6 +15,10 @@ mkdistdir:
 
 clean:
 	-rm $(OUTPUT_BINARY)-*
+
+image:
+	docker build -t dill:$(VERSION) .
+	docker tag dill:$(VERSION) dill:latest 
 
 temp = $(subst /, ,$@)
 os = $(word 1, $(temp))

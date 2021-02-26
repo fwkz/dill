@@ -4,8 +4,24 @@ Dynamic Listener TCP Proxy integrated with Hashicorp Consul.
 ## Motivation
 Building proxy with first-class support for dynamic listeners. 
 
-Exposing dynamic backends on the static frontend is the bread-and-butter of any modern proxy. Load balancing multiple dynamic backends from one ingress point using different ports is something that, for a good reason as it might poise certain security concerns, is not that simple. But when you exactly know what you are doing you are pretty much on your own.
+Exposing dynamic backends on the static frontend ports is the bread-and-butter of any modern proxy. Load balancing multiple dynamic backends from one ingress point using on-demand opened ports is something that, for a good reason as it might poise certain security concerns, is not that simple. But when you exactly know what you are doing you are pretty much on your own.
 
+## Installation
+### Pre-build binaries
+You can find pre-built binaries in [Releases](https://github.com/fwkz/dill/releases).
+### Build from sources
+```
+$ make build
+```
+Compiled binary will be available inside `bin/` directory. 
+### Docker
+```
+$ docker pull fwkz/dill
+```
+or build the image yourself from the sources
+```
+make image
+```
 
 ## Routing
 `dill` is building its routing table based on services registered in `Consul`. All you need to do in order to expose Consul registered service in `dill` instace is to add appropriate tags.
