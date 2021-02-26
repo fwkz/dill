@@ -41,7 +41,7 @@ make image
 ## Configuration
 `dill` already comes with sane defaults but you can adjust its behaviour providing configuration file 
 ```bash
-$ dill -c config.toml
+$ dill -config config.toml
 ``` 
 or use environment variables
 ```bash
