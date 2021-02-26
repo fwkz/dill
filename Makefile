@@ -1,4 +1,5 @@
 .PHONY: build fmt mkdistdir clean image release $(PLATFORMS) 
+
 VERSION := $(shell git describe --tags)
 PLATFORMS := darwin/amd64 linux/amd64
 DIST_DIR := $(PWD)/bin
@@ -31,4 +32,4 @@ $(PLATFORMS): mkdistdir clean fmt
 
 .PHONY: dill
 dill: build
-	./bin/dill -config config.toml
+	$(shell $(OUTPUT_BINARY) -config config.toml)
