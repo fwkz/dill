@@ -8,3 +8,5 @@ Makefile
 LICENSE
 README.md
 Dockerfile
+.DS_Store
+
