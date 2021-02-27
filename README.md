@@ -13,7 +13,7 @@ You can find pre-built binaries in [Releases](https://github.com/fwkz/dill/relea
 ```
 $ make build
 ```
-Compiled binary will be available inside `bin/` directory. 
+Compiled binary will be available inside `dist/` directory. 
 ### Docker
 ```
 $ docker pull fwkz/dill
