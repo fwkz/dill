@@ -14,7 +14,10 @@ DIST_DIR := $(PWD)/dist
 OUTPUT_BINARY := $(DIST_DIR)/dill_$(VERSION)
 
 build: mkdistdir clean fmt
-	go build -o $(OUTPUT_BINARY) $(PWD)/cmd/dill/main.go
+	go build \
+	-ldflags="-X 'main.version=$(VERSION)'" \
+	-o $(OUTPUT_BINARY) \
+	$(PWD)/cmd/dill/main.go
 
 fmt:
 	gofmt -s -w $(PWD)
@@ -38,7 +41,10 @@ release: $(PLATFORMS) image
 	$(shell cd $(DIST_DIR); shasum -a 256 * > dill_$(VERSION)_sha256_checksums.txt)
 
 $(PLATFORMS): mkdistdir clean fmt
-	GOOS=$(os) GOARCH=$(arch) go build -o $(OUTPUT_BINARY)_$(os)_$(arch)$(ext) $(PWD)/cmd/dill/main.go
+	GOOS=$(os) GOARCH=$(arch) go build \
+	-ldflags="-X 'main.version=$(VERSION)'" \
+	-o $(OUTPUT_BINARY)_$(os)_$(arch)$(ext) \
+	$(PWD)/cmd/dill/main.go
 
 .PHONY: dill
 dill: build

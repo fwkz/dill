@@ -12,6 +12,7 @@ import (
 	"dill/pkg/registry/consul"
 )
 
+var version = "0.0.0" // will inserted dynamically at build time
 var sch <-chan os.Signal
 
 func init() {
@@ -21,6 +22,8 @@ func init() {
 }
 
 func main() {
+	log.WithField("version", version).Info("Starting dill")
+
 	procs := viper.GetInt("runtime.gomaxprocs")
 	log.WithField("count", procs).Info("Setting GOMAXPROCS")
 	runtime.GOMAXPROCS(procs)
