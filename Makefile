@@ -11,7 +11,7 @@ PLATFORMS := \
 	windows/386/.exe \
 	windows/amd64/.exe
 DIST_DIR := $(PWD)/dist
-OUTPUT_BINARY := $(DIST_DIR)/dill_$(VERSION)
+OUTPUT_BINARY := $(DIST_DIR)/dill
 
 build: mkdistdir clean fmt
 	go build \
@@ -43,8 +43,10 @@ release: $(PLATFORMS) image
 $(PLATFORMS): mkdistdir clean fmt
 	GOOS=$(os) GOARCH=$(arch) go build \
 	-ldflags="-X 'main.version=$(VERSION)'" \
-	-o $(OUTPUT_BINARY)_$(os)_$(arch)$(ext) \
+	-o $(OUTPUT_BINARY)$(ext) \
 	$(PWD)/cmd/dill/main.go
+
+	zip -jmq $(OUTPUT_BINARY)_$(VERSION)_$(os)_$(arch).zip $(OUTPUT_BINARY)$(ext)
 
 .PHONY: dill
 dill: build
