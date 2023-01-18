@@ -9,7 +9,7 @@ import (
 
 	"dill/pkg/controller"
 	"dill/pkg/operations"
-	"dill/pkg/registry/static"
+	"dill/pkg/registry"
 )
 
 var version = "0.0.0" // will inserted dynamically at build time
@@ -32,7 +32,8 @@ func main() {
 	if l != "" {
 		go operations.Peek(l)
 	}
+
 	c := make(chan *controller.RoutingTable)
-	go static.ParseStaticRouting(c)
+	go registry.GetServicesMonitor()(c)
 	controller.ControlRoutes(c, sch)
 }
