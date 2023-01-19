@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 
 	"dill/pkg/controller"
-	"dill/pkg/registry/file"
+	"dill/pkg/routing/file"
 )
 
 func computeHash(value []byte) []byte {

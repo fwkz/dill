@@ -1,11 +1,33 @@
 package file
 
 import (
-	"dill/pkg/controller"
-
-	"github.com/fsnotify/fsnotify"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
+	"dill/pkg/controller"
 )
+
+type RoutingConfig []struct {
+	Name     string
+	Listener string
+	Backends []string
+}
+
+func readRoutingConfig(v *viper.Viper) RoutingConfig {
+	p := viper.GetString("routing.file.path")
+	log.WithField("path", p).Info("Reading routing config file")
+
+	v.SetConfigFile(p)
+	err := v.ReadInConfig()
+	if err != nil {
+		log.WithError(err).Error("Invalid routing config")
+		return nil
+	}
+	cfg := RoutingConfig{}
+	v.UnmarshalKey("services", &cfg)
+
+	return cfg
+}
 
 type service struct {
 	name     string
@@ -21,6 +43,7 @@ func (s *service) Routing() ([]string, string) {
 	return []string{s.listener}, s.backend
 }
 
+// BuildRoutingTable builds routing table ouf of static routing configuration file
 func BuildRoutingTable(cfg RoutingConfig) controller.RoutingTable {
 	rt := controller.RoutingTable{ConsulIndex: 1, Table: map[string][]string{}}
 	for _, e := range cfg {
@@ -34,20 +57,4 @@ func BuildRoutingTable(cfg RoutingConfig) controller.RoutingTable {
 		}
 	}
 	return rt
-}
-
-func MonitorServices(c chan<- *controller.RoutingTable) {
-	v := viper.New()
-	cfg := readRoutingConfig(v)
-	rt := BuildRoutingTable(cfg)
-	c <- &rt
-
-	if viper.GetBool("routing.file.watch") {
-		v.OnConfigChange(func(e fsnotify.Event) {
-			rc := readRoutingConfig(viper.New())
-			t := BuildRoutingTable(rc)
-			c <- &t
-		})
-		v.WatchConfig()
-	}
 }

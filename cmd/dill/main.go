@@ -9,7 +9,7 @@ import (
 
 	"dill/pkg/controller"
 	"dill/pkg/operations"
-	"dill/pkg/registry"
+	"dill/pkg/routing"
 )
 
 var version = "0.0.0" // will inserted dynamically at build time
@@ -34,6 +34,6 @@ func main() {
 	}
 
 	c := make(chan *controller.RoutingTable)
-	go registry.GetServicesMonitor()(c)
+	go routing.GetRoutingMonitor()(c)
 	controller.ControlRoutes(c, sch)
 }
