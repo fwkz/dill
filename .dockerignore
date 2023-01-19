@@ -1,5 +1,8 @@
 bin/
 dist/
+configs/
+contrib/
+venv/
 .idea/
 .git/
 .gitignore

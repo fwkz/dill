@@ -50,4 +50,4 @@ $(PLATFORMS): mkdistdir clean fmt
 
 .PHONY: dill
 dill: build
-	$(shell $(OUTPUT_BINARY) -config config.toml)
+	$(shell $(OUTPUT_BINARY) -config configs/config.toml)
