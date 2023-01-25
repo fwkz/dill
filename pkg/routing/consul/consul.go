@@ -3,7 +3,7 @@ package consul
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -34,6 +34,10 @@ func (s *service) Name() string {
 	return s.Name_
 }
 
+func (s *service) Proxy() string {
+	return ""
+}
+
 func fetchHealthyServices(index int) ([]string, int, error) {
 	// TODO allow for stale reads
 	req, err := http.NewRequest(
@@ -58,7 +62,7 @@ func fetchHealthyServices(index int) ([]string, int, error) {
 		return nil, 0, err
 	}
 	defer res.Body.Close()
-	data, _ := ioutil.ReadAll(res.Body)
+	data, _ := io.ReadAll(res.Body)
 	var healthyServices []struct {
 		Name string `json:"ServiceName"`
 	}
@@ -95,7 +99,7 @@ func fetchServiceDetails(name string) ([]service, error) {
 		return nil, err
 	}
 	defer res.Body.Close()
-	data, _ := ioutil.ReadAll(res.Body)
+	data, _ := io.ReadAll(res.Body)
 
 	var parsed []struct {
 		Node struct {

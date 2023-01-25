@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/exp/slices"
 
-	"dill/pkg/controller"
+	"dill/pkg/proxy"
 	"dill/pkg/routing/file"
 )
 
@@ -46,7 +46,7 @@ func setConfigType(content_type string, v *viper.Viper) error {
 	return nil
 }
 
-func MonitorServices(c chan<- *controller.RoutingTable) {
+func MonitorServices(c chan<- *proxy.RoutingTable) {
 	prevSum := []byte{}
 	consulIndex := 0
 	e := viper.GetString("routing.http.endpoint")

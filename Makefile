@@ -20,6 +20,7 @@ build: mkdistdir clean fmt
 	$(PWD)/cmd/dill/main.go
 
 fmt:
+	goimports -w -local dill/ $(PWD)
 	gofmt -s -w $(PWD)
 
 mkdistdir:

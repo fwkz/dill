@@ -1,4 +1,4 @@
-package frontend
+package proxy
 
 import (
 	"net"
@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func New(address string) *Frontend {
+func NewFrontend(address string) *Frontend {
 	f := &Frontend{Address: address, conns: make(map[string]net.Conn)}
 	return f
 }

@@ -4,10 +4,10 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 
-	"dill/pkg/controller"
+	"dill/pkg/proxy"
 )
 
-func MonitorServices(c chan<- *controller.RoutingTable) {
+func MonitorServices(c chan<- *proxy.RoutingTable) {
 	v := viper.New()
 	cfg := readRoutingConfig(v)
 	rt := BuildRoutingTable(cfg)

@@ -7,8 +7,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"dill/pkg/controller"
 	"dill/pkg/operations"
+	"dill/pkg/proxy"
 	"dill/pkg/routing"
 )
 
@@ -33,7 +33,7 @@ func main() {
 		go operations.Peek(l)
 	}
 
-	c := make(chan *controller.RoutingTable)
+	c := make(chan *proxy.RoutingTable)
 	go routing.GetRoutingMonitor()(c)
-	controller.ControlRoutes(c, sch)
+	proxy.ControlRoutes(c, sch)
 }

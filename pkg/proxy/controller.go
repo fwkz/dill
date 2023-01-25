@@ -1,20 +1,16 @@
-package controller
+package proxy
 
 import (
 	"os"
 
 	log "github.com/sirupsen/logrus"
-
-	"dill/pkg/backend"
-	"dill/pkg/frontend"
-	"dill/pkg/proxy"
 )
 
 // ControlRoutes waits for a new version of the routing table,
 // compares it with previous version and apply approriate changes.
 func ControlRoutes(c <-chan *RoutingTable, shutdown <-chan os.Signal) {
 	log.Info("Starting routes controller")
-	prt := &RoutingTable{map[string][]string{}, 1}
+	prt := &RoutingTable{map[string][]Upstream{}, 1}
 	for {
 		select {
 		case rt := <-c:
@@ -22,7 +18,7 @@ func ControlRoutes(c <-chan *RoutingTable, shutdown <-chan os.Signal) {
 			prt = rt
 		case <-shutdown:
 			log.Info("Closing routes controller")
-			proxy.Shutdown()
+			Shutdown()
 			return
 		}
 	}
@@ -36,16 +32,16 @@ func updateRouting(routingTable *RoutingTable, previousRoutingTable *RoutingTabl
 		previousRoutingTable.FrontendAddresses(),
 		routingTable.FrontendAddresses(),
 	) {
-		if p := proxy.Lookup(f); p != nil {
+		if p := Lookup(f); p != nil {
 			log.WithField("address", f).Info("No backends for frontend")
 			p.Close()
 		}
 	}
 	for port, upstreams := range routingTable.Table {
-		if p := proxy.Lookup(port); p == nil {
-			p = proxy.New(
-				frontend.New(port),
-				backend.New(upstreams),
+		if p := Lookup(port); p == nil {
+			p = NewProxy(
+				NewFrontend(port),
+				NewBackend(upstreams),
 			)
 			p.ListenAndServe()
 		} else {

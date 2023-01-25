@@ -1,4 +1,4 @@
-package backend
+package proxy
 
 import (
 	"math/rand"
@@ -7,7 +7,7 @@ import (
 )
 
 type strategy interface {
-	Select(*[]string) string
+	Select(*[]Upstream) Upstream
 	Name() string
 }
 
@@ -15,7 +15,7 @@ type roundrobin struct {
 	next uint32
 }
 
-func (r *roundrobin) Select(upstreams *[]string) string {
+func (r *roundrobin) Select(upstreams *[]Upstream) Upstream {
 	n := atomic.AddUint32(&r.next, 1)
 	return (*upstreams)[(int(n)-1)%len(*upstreams)]
 }

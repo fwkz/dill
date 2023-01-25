@@ -1,4 +1,4 @@
-package controller
+package proxy
 
 import (
 	"fmt"
@@ -12,21 +12,22 @@ import (
 type Service interface {
 	Routing() ([]string, string)
 	Name() string
+	Proxy() string
 }
 
 type RoutingTable struct {
-	Table       map[string][]string
+	Table       map[string][]Upstream
 	ConsulIndex int
 }
 
 // Update validates the service's routing settings
 // and updates routing table if it's valid.
 func (rt *RoutingTable) Update(service Service) {
-	listeners, upstream := service.Routing()
+	listeners, upstreamAddr := service.Routing()
 	if len(listeners) == 0 {
 		log.WithFields(log.Fields{
 			"service_name": service.Name(),
-			"upstream":     upstream,
+			"upstream":     upstreamAddr,
 		}).Warn("No listeners found")
 		return
 	}
@@ -37,7 +38,7 @@ func (rt *RoutingTable) Update(service Service) {
 			log.WithFields(log.Fields{
 				"address":      addr,
 				"service_name": service.Name(),
-				"upstream":     upstream,
+				"upstream":     upstreamAddr,
 			}).Warn("Invalid listener address, port missing.")
 			continue
 		}
@@ -49,7 +50,7 @@ func (rt *RoutingTable) Update(service Service) {
 			log.WithFields(log.Fields{
 				"port":         port,
 				"service_name": service.Name(),
-				"upstream":     upstream,
+				"upstream":     upstreamAddr,
 			}).Warn("Invalid listener port")
 			continue
 		}
@@ -68,20 +69,20 @@ func (rt *RoutingTable) Update(service Service) {
 				"label":             label,
 				"allowed_listeners": allowedListeners,
 				"service_name":      service.Name(),
-				"upstream":          upstream,
+				"upstream":          upstreamAddr,
 			}).Warn("Invalid listener label")
 			continue
 		}
 
-		rt.update(addr, upstream)
+		rt.update(addr, Upstream{address: upstreamAddr, prx: service.Proxy()})
 	}
 }
 
-func (rt *RoutingTable) update(addr string, upstream string) {
+func (rt *RoutingTable) update(addr string, upstream Upstream) {
 	if t, ok := rt.Table[addr]; ok {
 		rt.Table[addr] = append(t, upstream)
 	} else {
-		rt.Table[addr] = []string{upstream}
+		rt.Table[addr] = []Upstream{upstream}
 	}
 }
 

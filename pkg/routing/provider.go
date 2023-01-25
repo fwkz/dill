@@ -4,13 +4,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"dill/pkg/controller"
+	"dill/pkg/proxy"
 	"dill/pkg/routing/consul"
 	"dill/pkg/routing/file"
 	"dill/pkg/routing/http"
 )
 
-type routingeMonitor func(chan<- *controller.RoutingTable)
+type routingeMonitor func(chan<- *proxy.RoutingTable)
 
 var routingMonitors = map[string]routingeMonitor{
 	"http":   http.MonitorServices,

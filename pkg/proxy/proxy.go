@@ -3,14 +3,13 @@ package proxy
 import (
 	"io"
 	"net"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
-
-	"dill/pkg/backend"
-	"dill/pkg/frontend"
+	proxy_ "golang.org/x/net/proxy"
 )
 
 var (
@@ -24,7 +23,7 @@ var bufferPool = sync.Pool{
 	},
 }
 
-func New(frontend *frontend.Frontend, backend *backend.Backend) *Proxy {
+func NewProxy(frontend *Frontend, backend *Backend) *Proxy {
 	p := &Proxy{frontend: frontend, backend: backend, quit: make(chan struct{})}
 	rwm.Lock()
 	proxies[frontend.Address] = p
@@ -55,8 +54,8 @@ func Shutdown() {
 }
 
 type Proxy struct {
-	frontend *frontend.Frontend
-	backend  *backend.Backend
+	frontend *Frontend
+	backend  *Backend
 	quit     chan struct{}
 	wg       sync.WaitGroup
 }
@@ -89,7 +88,7 @@ func (p *Proxy) Close() {
 	rwm.Unlock()
 }
 
-func (p *Proxy) UpdateBackend(upstreams []string) {
+func (p *Proxy) UpdateBackend(upstreams []Upstream) {
 	p.backend.SetUpstreams(upstreams)
 }
 
@@ -117,10 +116,36 @@ func (p *Proxy) serve() error {
 	}
 }
 
-func (p *Proxy) handle(in net.Conn, upstreamAddr string) {
-	out, err := net.Dial("tcp", upstreamAddr)
+type dialer interface {
+	Dial(string, string) (net.Conn, error)
+}
+
+func (p *Proxy) dial(u Upstream) (net.Conn, error) {
+	var d dialer
+	if u.prx != "" {
+		url, err := url.Parse(u.prx)
+		if err != nil {
+			log.WithError(err).Info("Failed to parse proxy URL")
+			return nil, err
+		}
+		d, err = proxy_.FromURL(url, proxy_.Direct)
+		if err != nil {
+			log.WithError(err).Info("SOCKS proxy connection failed")
+			return nil, err
+		}
+	} else {
+		d = &net.Dialer{}
+	}
+
+	out, err := d.Dial("tcp", u.address)
+	return out, err
+}
+
+func (p *Proxy) handle(in net.Conn, u Upstream) {
+	out, err := p.dial(u)
 	if err != nil {
 		in.Close()
+		log.WithError(err).Info("Connection failed")
 		return
 	}
 	once := sync.Once{}

@@ -4,13 +4,14 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"dill/pkg/controller"
+	"dill/pkg/proxy"
 )
 
 type RoutingConfig []struct {
 	Name     string
 	Listener string
 	Backends []string
+	Proxy    string
 }
 
 func readRoutingConfig(v *viper.Viper) RoutingConfig {
@@ -33,6 +34,7 @@ type service struct {
 	name     string
 	listener string
 	backend  string
+	proxy    string
 }
 
 func (s *service) Name() string {
@@ -43,15 +45,20 @@ func (s *service) Routing() ([]string, string) {
 	return []string{s.listener}, s.backend
 }
 
+func (s *service) Proxy() string {
+	return s.proxy
+}
+
 // BuildRoutingTable builds routing table ouf of static routing configuration file
-func BuildRoutingTable(cfg RoutingConfig) controller.RoutingTable {
-	rt := controller.RoutingTable{ConsulIndex: 1, Table: map[string][]string{}}
+func BuildRoutingTable(cfg RoutingConfig) proxy.RoutingTable {
+	rt := proxy.RoutingTable{ConsulIndex: 1, Table: map[string][]proxy.Upstream{}}
 	for _, e := range cfg {
 		for _, b := range e.Backends {
 			srv := service{
 				name:     e.Name,
 				listener: e.Listener,
 				backend:  b,
+				proxy:    e.Proxy,
 			}
 			rt.Update(&srv)
 		}

@@ -5,13 +5,13 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"dill/pkg/controller"
+	"dill/pkg/proxy"
 )
 
 var waitTime time.Duration = 5 * time.Second
 
 // MonitorServices fetches healthy services that was tagged as `dill`
-func MonitorServices(c chan<- *controller.RoutingTable) {
+func MonitorServices(c chan<- *proxy.RoutingTable) {
 	log.Info("Starting service monitor")
 	index := 1
 	for {
@@ -22,7 +22,7 @@ func MonitorServices(c chan<- *controller.RoutingTable) {
 			continue
 		}
 		index = newIndex
-		rt := &controller.RoutingTable{Table: map[string][]string{}, ConsulIndex: newIndex}
+		rt := &proxy.RoutingTable{Table: map[string][]proxy.Upstream{}, ConsulIndex: newIndex}
 		for _, s := range services {
 			details, err := fetchServiceDetails(s)
 			if err != nil {
