@@ -42,8 +42,13 @@ func SetupConfig() {
 	}
 
 	r := viper.GetStringMap("routing")
-	if len(r) != 1 {
-		fmt.Println("config error: invalid configuration of routing provider")
+	switch len(r) {
+	case 0:
+		fmt.Println("config error: missing configuration of routing provider")
+		os.Exit(1)
+	case 1:
+	default:
+		fmt.Println("config error: multiple configurations of routing provider")
 		os.Exit(1)
 	}
 }
