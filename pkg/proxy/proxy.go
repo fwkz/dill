@@ -19,7 +19,8 @@ var (
 
 var bufferPool = sync.Pool{
 	New: func() interface{} {
-		return make([]byte, 32*1024)
+		b := make([]byte, 32*1024)
+		return &b
 	},
 }
 
@@ -145,16 +146,14 @@ func (p *Proxy) handle(in net.Conn, u Upstream) {
 	out, err := p.dial(u)
 	if err != nil {
 		in.Close()
-		log.WithError(err).Info("Connection failed")
+		log.WithError(err).Info("Connection to upstream failed")
 		return
 	}
 	once := sync.Once{}
 	cp := func(dst net.Conn, src net.Conn) {
-		buf := bufferPool.Get().([]byte)
+		buf := bufferPool.Get().(*[]byte)
 		defer bufferPool.Put(buf)
-		_, err := io.CopyBuffer(dst, src, buf)
-		if err != nil {
-		}
+		_, _ = io.CopyBuffer(dst, src, *buf)
 		once.Do(func() {
 			in.Close()
 			out.Close()
