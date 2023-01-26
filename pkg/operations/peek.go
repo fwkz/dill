@@ -22,12 +22,14 @@ func Peek(addr string) {
 			continue
 		}
 
-		d := proxy.Dump()
-		if d == "" {
-			d = "No registered backends. Please verify services' configuration.\n"
-		}
+		go func() {
+			d := proxy.Dump()
+			if d == "" {
+				d = "No registered backends. Please verify routing configuration.\n"
+			}
 
-		c.Write([]byte(d))
-		c.Close()
+			c.Write([]byte(d))
+			c.Close()
+		}()
 	}
 }
