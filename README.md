@@ -1,10 +1,35 @@
 # dill
-Dynamic Listener TCP Proxy integrated with Hashicorp Consul.
-
-## Motivation
-Building proxy with first-class support for dynamic listeners. 
+Proxy with first-class support for dynamic listeners. 
 
 Exposing dynamic backends on the static frontend ports is the bread-and-butter of any modern proxy. Load balancing multiple dynamic backends from one ingress point using on-demand opened ports is something that, for a good reason as it might poise certain security concerns, is not that simple. But when you exactly know what you are doing you are pretty much on your own.
+
+## Table of Contents
+- [dill](#dill)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+    - [Pre-build binaries](#pre-build-binaries)
+    - [Build from sources](#build-from-sources)
+    - [Docker](#docker)
+  - [Getting Started](#getting-started)
+  - [Routing](#routing)
+    - [File](#file)
+    - [HTTP](#http)
+    - [Consul](#consul)
+  - [Configuration](#configuration)
+    - [Values](#values)
+      - [consul.address `string`](#consuladdress-string)
+      - [listeners.allowed `map`](#listenersallowed-map)
+      - [listeners.port\_min `integer`](#listenersport_min-integer)
+      - [listeners.port\_max `integer`](#listenersport_max-integer)
+      - [peek.listener `string`](#peeklistener-string)
+      - [runtime.gomaxprocs `integer`](#runtimegomaxprocs-integer)
+    - [Formats](#formats)
+      - [TOML](#toml)
+      - [YAML](#yaml)
+      - [JSON](#json)
+      - [Environment variables](#environment-variables)
+  - [Project status](#project-status)
+  - [Alternatives](#alternatives)
 
 ## Installation
 ### Pre-build binaries
@@ -22,9 +47,93 @@ or build the image yourself from the sources
 ```
 make image
 ```
+## Getting Started
+First of all we have to define how we want to route the incoming traffic. `dill` provides multiple [routing providers](#routing) that allow you to apply live changes to the routing configuration. By far simplest approach is [routing.file](#file).
+```toml
+# /etc/dill/config.toml
+[routing.file]
+  path = "/etc/dill/routing.toml"
+  watch = true 
+```
+```toml
+# /etc/dill/routing.toml
+[[services]]
+  name = "foobar"
+  listener = "any:1234"
+  backends = ["192.168.10.1:5050"]
+``` 
+```shell
+$ dill -config /etc/dill/config.toml
+```
+And that's it! `dill` will bind service running on `192.168.10.1:5050` to `0.0.0.0:1234` on the host running the `dill`. Make sure to [read more](#listenersallowed-map) about interface labels, e.g., `any`, `local`
+
 
 ## Routing
-`dill` is building its routing table based on services registered in `Consul`. All you need to do in order to expose Consul registered service in `dill` instace is to add appropriate tags.
+`dill` offers multiple routing providers that allow you to apply live changes to the routing configuration.
+### File
+It is the simplest way of defining routing. All routing logic is being kept in a separate config file. By setting `routing.file.watch = true` you can also subscribe to changes made to the routing configuration file which would give you the full power of dill's dynamic routing capabilities.
+```toml
+[routing.file]
+  path = "/etc/dill/routing.toml"
+  watch = true 
+```
+The routing configuration defined by `routing.file.path` should look like this:
+```toml
+# /etc/dill/routing.toml
+[[services]]
+  name = "foo"
+  listener = "local:1234"
+  backends = ["127.0.0.1:5050"]
+
+[[services]]
+  name = "bar"
+  listener = "any:4444"
+  backends = ["127.0.0.1:4000", "127.0.0.1:4001"]
+```
+or equivalent in different format e.g. `JSON`, `YAML`:
+```json
+{
+  "services": [
+    {
+      "name": "foo",
+      "listener": "local:1234",
+      "backends": [
+        "127.0.0.1:5050"
+      ]
+    },
+    {
+      "name": "bar",
+      "listener": "any:4444",
+      "backends": [
+        "127.0.0.1:4000",
+        "127.0.0.1:4001"
+      ]
+    }
+  ]
+}
+```
+```yaml
+services:
+  - name: foo
+    listener: local:1234
+    backends:
+      - 127.0.0.1:5050
+  - name: bar
+    listener: any:4444
+    backends:
+      - 127.0.0.1:4000
+      - 127.0.0.1:4001
+```
+### HTTP
+`dill` can poll the HTTP endpoint for its routing configuration with a predefined time interval. Fetched data should have the same format as the routing config file defined by `routing.file.path` and will be parsed based on the response `Content-Type` header.
+```toml
+[routing.http]
+  endpoint = "http://127.0.0.1:8000/config/routing.json"
+  poll_interval = "5s"
+  poll_timeout = "5s"
+```
+### Consul
+`dill` can build its routing table based on services registered in `Consul`. All you need to do in order to expose Consul registered service in `dill` instace is to add appropriate tags.
 * `dill` tag registers service and its updates with `dill` instance.
 * `dill.listener` binds, based on predefined listeners declared by `listeners.allowed`, service to specific address and port.
 ```json
@@ -114,7 +223,7 @@ port_max = 49151
 local = "127.0.0.1"
 any = "0.0.0.0"
 
-[consul]
+[routing.consul]
 address = "http://127.0.0.1:8500"
 
 [peek]
@@ -132,8 +241,11 @@ listeners:
     local: "127.0.0.1"
     any: "0.0.0.0"
 
-consul:
-  address: "http://127.0.0.1:8500"
+routing:
+  http:
+    endpoint: "http://127.0.0.1:8000/config/routing.json"
+    poll_interval: "5s"
+    poll_timeout: "5s"
 
 peek:
   listener: "127.0.0.1:4141"
@@ -152,8 +264,11 @@ runtime:
       "any": "0.0.0.0"
     }
   },
-  "consul": {
-    "address": "http://127.0.0.1:8500"
+  "routing": {
+    "file": {
+      "path": "/Users/fwkz/Devel/dill/configs/routing.toml",
+      "watch": true
+    }
   },
   "peek": {
     "listener": "127.0.0.1:4141"
