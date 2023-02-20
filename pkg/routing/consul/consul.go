@@ -35,7 +35,13 @@ func (s *service) Name() string {
 }
 
 func (s *service) Proxy() string {
-	return ""
+	for _, t := range s.Tags {
+		if strings.HasPrefix(t, "dill.proxy=") {
+			v := strings.Split(t, "=")
+			return v[1]
+		}
+	}
+	return "" 
 }
 
 func fetchHealthyServices(index int) ([]string, int, error) {
