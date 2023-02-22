@@ -41,7 +41,7 @@ func (s *service) Proxy() string {
 			return v[1]
 		}
 	}
-	return "" 
+	return ""
 }
 
 func fetchHealthyServices(index int) ([]string, int, error) {

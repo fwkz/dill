@@ -51,7 +51,7 @@ func MonitorServices(c chan<- *proxy.RoutingTable) {
 	consulIndex := 0
 	e := viper.GetString("routing.http.endpoint")
 	pollInterval := viper.GetDuration("routing.http.poll_interval")
-	pollTimeout:= viper.GetDuration("routing.http.poll_timeout")
+	pollTimeout := viper.GetDuration("routing.http.poll_timeout")
 	client := http.Client{Timeout: pollTimeout}
 
 	for {
