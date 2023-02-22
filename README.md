@@ -259,12 +259,18 @@ _default: equals to `runtime.NumCPU()`_
 Location of [routing configuration file](#schema).
 #### routing.file.watch `bool`
 Subscribe to changes made to the routing configuration file which would give you the full power of dill's dynamic routing capabilities.
+
+_default: `true`_
 #### routing.http.endpoint `string`
 Endpoint which [http provider](#http) will poll for routing configuration
 #### routing.http.poll_interval `duration`
 How often [http provider](#http) will poll [endpoint](#routinghttpendpoint-string) for routing configuration
+
+_default: `5s`_
 #### routing.http.poll_timeout `duration`
 Maximum time  [http provider](#http) will wait when fetching routing configuration
+
+_default: `5s`_
 #### routing.consul.address `string`
 Consul address from which `dill` will fetch the updates and build the routing table.
 ### Formats

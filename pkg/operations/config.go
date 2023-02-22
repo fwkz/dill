@@ -31,6 +31,10 @@ func SetupConfig() {
 		map[string]string{"local": "127.0.0.1", "any": "0.0.0.0"},
 	)
 
+	viper.SetDefault("routing.http.poll_interval", 5)
+	viper.SetDefault("routing.http.poll_timeout", 5)
+	viper.SetDefault("routing.file.watch", true)
+
 	flag.Parse()
 	if configPath != "" {
 		viper.SetConfigFile(configPath)
@@ -48,7 +52,7 @@ func SetupConfig() {
 		os.Exit(1)
 	case 1:
 	default:
-		fmt.Println("config error: multiple configurations of routing provider")
+		fmt.Println("config error: multiple routing provider declared")
 		os.Exit(1)
 	}
 }
