@@ -71,15 +71,31 @@ First of all you have to define how you want to route the incoming traffic. `dil
 ```toml
 # /etc/dill/routing.toml
 [[services]]
-  name = "foobar"
+  name = "foo"
   listener = "any:1234"
   backends = ["192.168.10.1:5050"]
 ``` 
 ```shell
 $ dill -config /etc/dill/config.toml
 ```
-And that's it! `dill` will bind service running on `192.168.10.1:5050` to `0.0.0.0:1234` on the host running the `dill`. Make sure to [read more](#listenersallowed-map) about interface labels, e.g., `any`, `local`
+And that's it! `dill` will accept the traffic on `0.0.0.0:1234` and load balance it between services running on `192.168.10.1:5050` and `192.168.10.2:4050`. Make sure to [read more](#listenersallowed-map) about interface labels, e.g., `any`, `local`
 
+Now imagine that you spawned another service that accepts traffic on port `4444` and you'd like to expose it on running `dill` instance without any downtime to already load balanced services. It's dead simple, you just add a new entry: 
+```toml
+# /etc/dill/routing.toml
+[[services]]
+  name = "foobar"
+  listener = "any:1234"
+  backends = ["192.168.10.1:5050, 192.168.10.2:4050"]
+
+[[services]]
+  name = "bar"
+  listener = "any:4321"
+  backends = ["192.168.10.3:4444"]
+```
+`dill` will automatically pick up the changes and apply necessary modifications to its routing table. Service `bar` is now available on the host running the `dill` on port `4321`.
+
+If you are using a modern workload scheduler like Nomad or Kubernetes this idea becomes very powerful. For instance, using [Consul routing provider](#consul) with just a few tags you can expose dynamically spawned backends with no proxy downtime.
 
 ## Routing
 ### Providers
@@ -87,6 +103,8 @@ And that's it! `dill` will bind service running on `192.168.10.1:5050` to `0.0.0
 - [File](#file)
 - [HTTP](#http)
 - [Consul](#consul)
+
+You can help build the project and implement your routing provider based on your needs. If you need guidance, make sure to create Pull Request.
 #### File
 It is the simplest way of defining routing. All routing logic is being kept in a separate [config file](#schema). By setting `routing.file.watch = true` you can also subscribe to changes made to the routing configuration file which would give you the full power of dill's dynamic routing capabilities.
 ```toml
