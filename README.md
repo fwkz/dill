@@ -1,5 +1,5 @@
 # dill
-Cloud ready proxy with first-class support for dynamic listeners. 
+Cloud ready L4 TCP proxy with first-class support for dynamic listeners.
 
 Exposing dynamic backends on the static frontend ports is the bread-and-butter of any modern proxy. Load balancing multiple dynamic backends from one ingress point using on-demand opened ports is something that, for a good reason as it might poise certain security concerns, is not that simple. But when you exactly know what you are doing you are pretty much on your own.
 
@@ -16,6 +16,7 @@ Exposing dynamic backends on the static frontend ports is the bread-and-butter o
       - [File](#file)
       - [HTTP](#http)
       - [Consul](#consul)
+    - [Load balancing](#load-balancing)
     - [Schema](#schema)
       - [name](#name)
       - [listener](#listener)
@@ -127,6 +128,9 @@ In order to pass traffic via [proxy](#proxying) make sure to add `dill.proxy` ta
   }
 }
 ````
+### Load balancing
+`dill` distributes load across the backends using _round-robin_ strategy
+
 ### Schema
 The routing configuration should be compliant with following schema: 
 ```toml
