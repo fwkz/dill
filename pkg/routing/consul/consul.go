@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
-
-	"github.com/spf13/viper"
 )
 
 type service struct {
@@ -44,31 +43,36 @@ func (s *service) Proxy() string {
 	return ""
 }
 
-func fetchHealthyServices(index int) ([]string, int, error) {
-	// TODO allow for stale reads
+func fetchHealthyServices(index int, consulClient *httpClient) ([]string, int, error) {
 	req, err := http.NewRequest(
 		"GET",
-		viper.GetString("consul.address")+"/v1/health/state/passing",
+		consulClient.config.Address+"/v1/health/state/passing",
 		nil,
 	)
 	if err != nil {
 		return nil, 0, err
 	}
-	q := req.URL.Query()
+	q := url.Values{}
 	q.Add("filter", "ServiceTags contains `dill`")
 	if index <= 0 {
 		index = 1
 	}
 	q.Add("index", strconv.Itoa(index))
+	if consulClient.config.Wait != "" {
+		q.Add("wait", consulClient.config.Wait)
+	}
 	req.URL.RawQuery = q.Encode()
-
-	c := &http.Client{}
-	res, err := c.Do(req)
+	res, err := consulClient.Do(req)
 	if err != nil {
 		return nil, 0, err
 	}
 	defer res.Body.Close()
 	data, _ := io.ReadAll(res.Body)
+
+	if res.StatusCode != 200 {
+		return nil, 0, fmt.Errorf("%d: %s", res.StatusCode, data)
+	}
+
 	var healthyServices []struct {
 		Name string `json:"ServiceName"`
 	}
@@ -93,19 +97,29 @@ func fetchHealthyServices(index int) ([]string, int, error) {
 	return unique, newIndex, nil
 }
 
-func fetchServiceDetails(name string) ([]service, error) {
-	res, err := http.Get(
-		fmt.Sprintf(
-			"%s/v1/health/service/%s?passing=true",
-			viper.GetString("consul.address"),
-			name,
-		),
+func fetchServiceDetails(name string, consulClient *httpClient) ([]service, error) {
+	req, err := http.NewRequest(
+		"GET",
+		consulClient.config.Address+"/v1/health/service/"+name,
+		nil,
 	)
 	if err != nil {
 		return nil, err
 	}
+	q := url.Values{}
+	q.Add("passing", "true")
+	req.URL.RawQuery = q.Encode()
+	res, err := consulClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
 	defer res.Body.Close()
 	data, _ := io.ReadAll(res.Body)
+
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("%d: %s", res.StatusCode, data)
+	}
 
 	var parsed []struct {
 		Node struct {

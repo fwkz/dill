@@ -36,6 +36,11 @@ Exposing dynamic backends on the static frontend ports is the bread-and-butter o
       - [routing.http.poll\_interval `duration`](#routinghttppoll_interval-duration)
       - [routing.http.poll\_timeout `duration`](#routinghttppoll_timeout-duration)
       - [routing.consul.address `string`](#routingconsuladdress-string)
+      - [routing.consul.token `string`](#routingconsultoken-string)
+      - [routing.consul.datacenter `string`](#routingconsuldatacenter-string)
+      - [routing.consul.namespace `string`](#routingconsulnamespace-string)
+      - [routing.consul.wait `duration`](#routingconsulwait-duration)
+      - [routing.consul.consistency\_mode `string`](#routingconsulconsistency_mode-string)
     - [Formats](#formats)
       - [TOML](#toml)
       - [YAML](#yaml)
@@ -277,12 +282,15 @@ Value of Go's `runtime.GOMAXPROCS()`
 
 _default: equals to `runtime.NumCPU()`_
 
+---
 #### routing.file.path `string`
 Location of [routing configuration file](#schema).
 #### routing.file.watch `bool`
 Subscribe to changes made to the routing configuration file which would give you the full power of dill's dynamic routing capabilities.
 
 _default: `true`_
+
+---
 #### routing.http.endpoint `string`
 Endpoint which [http provider](#http) will poll for routing configuration
 #### routing.http.poll_interval `duration`
@@ -293,8 +301,30 @@ _default: `5s`_
 Maximum time  [http provider](#http) will wait when fetching routing configuration
 
 _default: `5s`_
+
+---
 #### routing.consul.address `string`
 Consul address from which `dill` will fetch the updates and build the routing table.
+#### routing.consul.token `string`
+Token giving access to Consul API. Required ACLs `node:read,service:read`
+
+_Optional_
+#### routing.consul.datacenter `string`
+Defines what datacenter will be queried when building routing table.
+
+_Optional. If not provided `dill` uses Consul defaults._
+#### routing.consul.namespace `string`
+Defines what namespace will be queried when building routing table. Namespaces are available only for Consul Enterprise users. 
+
+_Optional. If not provided `dill` uses Consul defaults._
+#### routing.consul.wait `duration`
+Defines how long [blocking API query](https://developer.hashicorp.com/consul/api-docs/features/blocking) will wait for a potential change using long polling.
+
+_Optional. If not provided `dill` uses Consul defaults._
+#### routing.consul.consistency_mode `string`
+Defines what [consistency mode](https://developer.hashicorp.com/consul/api-docs/features/consistency) to use when `dill` fetches the updates.
+
+_Optional. Allowed values: `stale`, `consistent`, `leader`. If not provided `dill` uses Consul defaults._
 ### Formats
 Configuration is powered by [Viper](https://github.com/spf13/viper) so it's possible to use format that suits you best.
 
