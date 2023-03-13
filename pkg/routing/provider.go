@@ -8,6 +8,7 @@ import (
 	"dill/pkg/routing/consul"
 	"dill/pkg/routing/file"
 	"dill/pkg/routing/http"
+	"dill/pkg/routing/nomad"
 )
 
 type routingeMonitor func(chan<- *proxy.RoutingTable)
@@ -15,6 +16,7 @@ type routingeMonitor func(chan<- *proxy.RoutingTable)
 var routingMonitors = map[string]routingeMonitor{
 	"http":   http.MonitorServices,
 	"consul": consul.MonitorServices,
+	"nomad":  nomad.MonitorServices,
 	"file":   file.MonitorServices,
 }
 
