@@ -44,6 +44,12 @@ type nomadConfig struct {
 	Namespace string
 	Wait      time.Duration
 	Stale     bool
+	TLS       struct {
+		CA       string
+		Cert     string
+		Key      string
+		Insecure bool
+	}
 }
 
 type nomadClient struct {
@@ -100,6 +106,12 @@ func newNomadClient(config *nomadConfig) (*nomadClient, error) {
 		SecretID:  config.Token,
 		Namespace: config.Namespace,
 		WaitTime:  config.Wait,
+		TLSConfig: &api.TLSConfig{
+			CACert:     config.TLS.CA,
+			ClientCert: config.TLS.Cert,
+			ClientKey:  config.TLS.Key,
+			Insecure:   config.TLS.Insecure,
+		},
 	})
 	if err != nil {
 		return nil, err
