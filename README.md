@@ -16,12 +16,13 @@ Exposing dynamic backends on the static frontend ports is the bread-and-butter o
       - [File](#file)
       - [HTTP](#http)
       - [Consul](#consul)
+      - [Nomad](#nomad)
     - [Load balancing](#load-balancing)
     - [Schema](#schema)
       - [name](#name)
       - [listener](#listener)
       - [backends](#backends)
-      - [proxy _(optional)_](#proxy-optional)
+      - [proxy](#proxy)
     - [Proxying](#proxying)
   - [Configuration](#configuration)
     - [Values](#values)
@@ -41,6 +42,15 @@ Exposing dynamic backends on the static frontend ports is the bread-and-butter o
       - [routing.consul.namespace `string`](#routingconsulnamespace-string)
       - [routing.consul.wait `duration`](#routingconsulwait-duration)
       - [routing.consul.consistency\_mode `string`](#routingconsulconsistency_mode-string)
+      - [routing.nomad.address `string`](#routingnomadaddress-string)
+      - [routing.nomad.token `string`](#routingnomadtoken-string)
+      - [routing.nomad.namespace `string`](#routingnomadnamespace-string)
+      - [routing.nomad.wait `duration`](#routingnomadwait-duration)
+      - [routing.nomad.stale `bool`](#routingnomadstale-bool)
+      - [routing.nomad.tls.ca `string`](#routingnomadtlsca-string)
+      - [routing.nomad.tls.cert `string`](#routingnomadtlscert-string)
+      - [routing.nomad.tls.key `string`](#routingnomadtlskey-string)
+      - [routing.nomad.tls.insecure `bool`](#routingnomadtlsinsecure-bool)
     - [Formats](#formats)
       - [TOML](#toml)
       - [YAML](#yaml)
@@ -150,7 +160,50 @@ In order to pass traffic via [proxy](#proxying) make sure to add `dill.proxy` ta
     ],
   }
 }
-````
+```
+Example configuration of Consul routing provider:
+```toml
+[routing.consul]
+  address = "http://127.0.0.1:8500"
+  token = "consul-communication-secret-token"
+  datacenter = "foo-1"  
+  namespace = "bar-namespace"
+  wait = "2m"
+  consistency_mode = "consistent"
+```
+#### Nomad
+Since version [`1.3.0`](https://github.com/hashicorp/nomad/releases/tag/v1.3.0) Nomad introduced native service discovery. Principales of exposing Nomad workloads in `dill` are exactly the same as for [Consul routing provider](#consul).
+
+Example [`service`](https://developer.hashicorp.com/nomad/docs/job-specification/service) block of Nomad job.
+```
+service {
+  name     = "foobar"
+  tags     = ["dill", "dill.listener=any:3821"]
+  port     = "db"
+  provider = "nomad"
+
+  check {
+    name     = "alive"
+    type     = "tcp"
+    interval = "10s"
+    timeout  = "2s"
+  }
+}
+```
+Example configuration of Nomad routing provider:
+```toml
+[routing.nomad]
+  address = "http://127.0.0.1:4646"
+  token = "nomad-communication-secret-token"
+  namespace = "foobar-namespace"
+  wait = "5m"
+  stale = true
+[routing.nomad.tls]
+  ca = "/foo/bar/ca"
+  cert = "/foo/bar/cert"
+  key = "/foo/bar/key"
+  insecure = false
+```
 ### Load balancing
 `dill` distributes load across the backends using _round-robin_ strategy
 
@@ -211,8 +264,10 @@ Name of the service.
 Listener that binds, based on predefined list declared by [`listeners.allowed`](#listenersallowed-map), backend to specific address and port.
 #### backends
 List of backend services that will be load balanced.
-#### proxy _(optional)_
+#### proxy
 [Proxy](#proxying) address if you want to tunnel the traffic.
+ 
+ _Optional_
 ### Proxying
 `dill` is capable of tunneling traffic to backend services using SOCKS proxy.
 ```toml
@@ -325,6 +380,45 @@ _Optional. If not provided `dill` uses Consul defaults._
 Defines what [consistency mode](https://developer.hashicorp.com/consul/api-docs/features/consistency) to use when `dill` fetches the updates.
 
 _Optional. Allowed values: `stale`, `consistent`, `leader`. If not provided `dill` uses Consul defaults._
+
+---
+#### routing.nomad.address `string`
+Nomad address from which `dill` will fetch the updates and build its routing table.
+
+#### routing.nomad.token `string`
+Token giving access to Nomad API. Required ACLs `namespace:read-job`
+
+_Optional._
+#### routing.nomad.namespace `string`
+Defines what namespace will be queried when building routing table.
+
+_Optional. If not provided `dill` uses default Nomad namespace._
+#### routing.nomad.wait `duration`
+Defines how long [blocking API query](https://developer.hashicorp.com/nomad/api-docs#blocking-queries) will wait for a potential change using long polling.
+
+_Optional. If not provided `dill` uses Nomad defaults._
+
+#### routing.nomad.stale `bool`
+[`stale`](https://developer.hashicorp.com/nomad/api-docs#consistency-modes) allows any Nomad server (non-leader) to service a read. This allows for lower latency and higher throughput. This means reads can be arbitrarily stale; however, results are generally consistent to within 50 milliseconds of the leader.
+
+_Optional. Default: `false`_
+
+#### routing.nomad.tls.ca `string`
+Path to a PEM-encoded CA cert file to use to verify the Nomad server SSL certificate.
+
+_Optional. Defaults to the system bundle._
+#### routing.nomad.tls.cert `string`
+Path to the certificate used for secure communication with Nomad.
+
+_Optional._
+#### routing.nomad.tls.key `string`
+Path to the key used for secure communication with Nomad. It's required if `routing.nomad.tls.cert` is used. 
+
+_Optional._
+#### routing.nomad.tls.insecure `bool`
+Disables certificate verification.
+
+_Optional. Default: `false`_
 ### Formats
 Configuration is powered by [Viper](https://github.com/spf13/viper) so it's possible to use format that suits you best.
 
