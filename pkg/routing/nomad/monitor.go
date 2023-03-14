@@ -13,14 +13,12 @@ var waitTime time.Duration = 5 * time.Second
 
 // MonitorServices fetches healthy services that was tagged as `dill`
 func MonitorServices(c chan<- *proxy.RoutingTable) {
-	log.Info("Starting service monitor")
-
 	cfg := nomadConfig{}
 	viper.UnmarshalKey("routing.nomad", &cfg)
 
 	nomadClient, err := newNomadClient(&cfg)
 	if err != nil {
-		log.Fatal("Invalid 'routing.nomad' configuration")
+		log.WithError(err).Fatal("Invalid configuration of 'nomad' routing provider")
 	}
 
 	var index uint64

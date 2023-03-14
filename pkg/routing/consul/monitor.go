@@ -13,8 +13,6 @@ var waitTime time.Duration = 5 * time.Second
 
 // MonitorServices fetches healthy services that was tagged as `dill`
 func MonitorServices(c chan<- *proxy.RoutingTable) {
-	log.Info("Starting service monitor")
-
 	cfg := consulConfig{}
 	viper.UnmarshalKey("routing.consul", &cfg)
 	cfg.Validate()

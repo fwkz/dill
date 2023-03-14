@@ -1,7 +1,9 @@
 package routing
 
 import (
-	log "github.com/sirupsen/logrus"
+	"errors"
+	"fmt"
+
 	"github.com/spf13/viper"
 
 	"dill/pkg/proxy"
@@ -21,12 +23,18 @@ var routingMonitors = map[string]routingeMonitor{
 }
 
 // GetRoutingMonitor selects routing provider based on configuration file
-func GetRoutingMonitor() routingeMonitor {
+func GetRoutingMonitor() (string, routingeMonitor, error) {
 	cfg := viper.GetStringMap("routing")
-	var monitor routingeMonitor
-	for k := range cfg {
-		monitor = routingMonitors[k]
-		log.WithField("provider", k).Info("Monitoring upstream services")
+	if len(cfg) > 1 {
+		return "", nil, errors.New("multiple routing providers declared")
 	}
-	return monitor
+
+	for k := range cfg {
+		monitor, ok := routingMonitors[k]
+		if !ok {
+			return k, nil, fmt.Errorf("unknown routing provider: %s", k)
+		}
+		return k, monitor, nil
+	}
+	return "", nil, errors.New("no routing provider declared")
 }

@@ -34,6 +34,13 @@ func main() {
 	}
 
 	c := make(chan *proxy.RoutingTable)
-	go routing.GetRoutingMonitor()(c)
+
+	name, monitor, err := routing.GetRoutingMonitor()
+	if err != nil {
+		log.WithError(err).Fatal("Failed to setup routing provider")
+	}
+	log.WithField("provider", name).Info("Starting routing provider")
+	go monitor(c)
+
 	proxy.ControlRoutes(c, sch)
 }
