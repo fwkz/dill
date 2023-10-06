@@ -1,9 +1,9 @@
 package consul
 
 import (
+	"log/slog"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
 	"dill/pkg/proxy"
@@ -23,7 +23,7 @@ func MonitorServices(c chan<- *proxy.RoutingTable) {
 	for {
 		services, newIndex, err := fetchHealthyServices(index, consulClient)
 		if err != nil {
-			log.WithField("error", err).Warning("Fetching healthy services failed")
+			slog.Warn("Fetching healthy services failed", "error", err)
 			time.Sleep(waitTime)
 			continue
 		}
@@ -32,9 +32,9 @@ func MonitorServices(c chan<- *proxy.RoutingTable) {
 		for _, s := range services {
 			details, err := fetchServiceDetails(s, consulClient)
 			if err != nil {
-				log.WithFields(
-					log.Fields{"error": err, "service": s},
-				).Warning("Fetching service details failed")
+				slog.Warn("Fetching service details failed",
+					"error", err, "service", s,
+				)
 				continue
 			}
 			for _, i := range details {

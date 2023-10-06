@@ -1,15 +1,14 @@
 package proxy
 
 import (
+	"log/slog"
 	"os"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // ControlRoutes waits for a new version of the routing table,
 // compares it with previous version and apply approriate changes.
 func ControlRoutes(c <-chan *RoutingTable, shutdown <-chan os.Signal) {
-	log.Info("Starting routes controller")
+	slog.Info("Starting routes controller")
 	prt := &RoutingTable{map[string][]Upstream{}, 1}
 	for {
 		select {
@@ -17,7 +16,7 @@ func ControlRoutes(c <-chan *RoutingTable, shutdown <-chan os.Signal) {
 			updateRouting(rt, prt)
 			prt = rt
 		case <-shutdown:
-			log.Info("Closing routes controller")
+			slog.Info("Closing routes controller")
 			Shutdown()
 			return
 		}
@@ -25,15 +24,16 @@ func ControlRoutes(c <-chan *RoutingTable, shutdown <-chan os.Signal) {
 }
 
 func updateRouting(routingTable *RoutingTable, previousRoutingTable *RoutingTable) {
-	log.WithField(
+	slog.Info(
+		"Change occurred, updating the routing.",
 		"consul_index", routingTable.ConsulIndex,
-	).Info("Change occurred, updating the routing.")
+	)
 	for _, f := range difference(
 		previousRoutingTable.FrontendAddresses(),
 		routingTable.FrontendAddresses(),
 	) {
 		if p := Lookup(f); p != nil {
-			log.WithField("address", f).Info("No backends for frontend")
+			slog.Info("No backends for frontend", "address", f)
 			p.Close()
 		}
 	}

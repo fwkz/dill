@@ -1,17 +1,13 @@
 package operations
 
-import log "github.com/sirupsen/logrus"
+import (
+	"log/slog"
+	"os"
+)
 
-type utcFormatter struct {
-	log.Formatter
-}
-
-func (u utcFormatter) Format(e *log.Entry) ([]byte, error) {
-	e.Time = e.Time.UTC()
-	return u.Formatter.Format(e)
-}
+var logLevel = new(slog.LevelVar)
 
 func SetupLogging() {
-	log.SetFormatter(utcFormatter{&log.JSONFormatter{}})
-	log.SetLevel(log.DebugLevel)
+	h := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: logLevel})
+	slog.SetDefault(slog.New(h))
 }

@@ -1,7 +1,8 @@
 package file
 
 import (
-	log "github.com/sirupsen/logrus"
+	"log/slog"
+
 	"github.com/spf13/viper"
 
 	"dill/pkg/proxy"
@@ -16,12 +17,12 @@ type RoutingConfig []struct {
 
 func readRoutingConfig(v *viper.Viper) RoutingConfig {
 	p := viper.GetString("routing.file.path")
-	log.WithField("path", p).Info("Reading routing config file")
+	slog.Info("Reading routing config file", "path", p)
 
 	v.SetConfigFile(p)
 	err := v.ReadInConfig()
 	if err != nil {
-		log.WithError(err).Error("Invalid routing config")
+		slog.Error("Invalid routing config", "error", err)
 		return nil
 	}
 	cfg := RoutingConfig{}

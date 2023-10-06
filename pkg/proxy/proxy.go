@@ -2,13 +2,13 @@ package proxy
 
 import (
 	"io"
+	"log/slog"
 	"net"
 	"net/url"
 	"strings"
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	proxy_ "golang.org/x/net/proxy"
 )
 
@@ -64,16 +64,18 @@ type Proxy struct {
 func (p *Proxy) ListenAndServe() {
 	err := p.frontend.Listen()
 	if err != nil {
-		log.WithField("error", err).Warning("Can't establish frontend listener")
+		slog.Warn("Can't establish frontend listener", "error", err)
 		return
 	}
 	p.wg.Add(1)
 	go func() {
 		err := p.serve()
 		if err != nil {
-			log.WithFields(
-				log.Fields{"error": err, "listener": p.frontend.Address},
-			).Error("Can't serve requests")
+			slog.Error(
+				"Can't serve requests",
+				"error", err,
+				"listener", p.frontend.Address,
+			)
 		}
 		p.wg.Done()
 	}()
@@ -126,12 +128,12 @@ func (p *Proxy) dial(u Upstream) (net.Conn, error) {
 	if u.prx != "" {
 		url, err := url.Parse(u.prx)
 		if err != nil {
-			log.WithError(err).Info("Failed to parse proxy URL")
+			slog.Info("Failed to parse proxy URL", "error", err)
 			return nil, err
 		}
 		d, err = proxy_.FromURL(url, proxy_.Direct)
 		if err != nil {
-			log.WithError(err).Info("SOCKS proxy connection failed")
+			slog.Info("SOCKS proxy connection failed", "error", err)
 			return nil, err
 		}
 	} else {
@@ -146,7 +148,7 @@ func (p *Proxy) handle(in net.Conn, u Upstream) {
 	out, err := p.dial(u)
 	if err != nil {
 		in.Close()
-		log.WithError(err).Info("Connection to upstream failed")
+		slog.Info("Connection to upstream failed", "error", err)
 		return
 	}
 	once := sync.Once{}

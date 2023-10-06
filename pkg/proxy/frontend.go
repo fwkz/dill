@@ -1,10 +1,9 @@
 package proxy
 
 import (
+	"log/slog"
 	"net"
 	"sync"
-
-	log "github.com/sirupsen/logrus"
 )
 
 func NewFrontend(address string) *Frontend {
@@ -20,7 +19,7 @@ type Frontend struct {
 }
 
 func (f *Frontend) Listen() error {
-	log.WithField("address", f.Address).Info("Frontend is starting to listen")
+	slog.Info("Frontend is starting to listen", "address", f.Address)
 	l, err := net.Listen("tcp", f.Address)
 	if err != nil {
 		return err
@@ -30,7 +29,7 @@ func (f *Frontend) Listen() error {
 }
 
 func (f *Frontend) Close() {
-	log.WithField("address", f.Address).Info("Closing frontend")
+	slog.Info("Closing frontend", "address", f.Address)
 	f.rwm.Lock()
 	for _, c := range f.conns {
 		c.Close()

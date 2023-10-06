@@ -2,10 +2,10 @@ package proxy
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -25,21 +25,21 @@ type RoutingTable struct {
 func (rt *RoutingTable) Update(service Service) {
 	listeners, upstreamAddr := service.Routing()
 	if len(listeners) == 0 {
-		log.WithFields(log.Fields{
-			"service_name": service.Name(),
-			"upstream":     upstreamAddr,
-		}).Warn("No listeners found")
+		slog.Warn("No listeners found",
+			"service_name", service.Name(),
+			"upstream", upstreamAddr,
+		)
 		return
 	}
 
 	for _, addr := range listeners {
 		a := strings.Split(addr, ":")
 		if len(a) != 2 {
-			log.WithFields(log.Fields{
-				"address":      addr,
-				"service_name": service.Name(),
-				"upstream":     upstreamAddr,
-			}).Warn("Invalid listener address, port missing.")
+			slog.Warn("Invalid listener address, port missing.",
+				"address", addr,
+				"service_name", service.Name(),
+				"upstream", upstreamAddr,
+			)
 			continue
 		}
 		label, port := a[0], a[1]
@@ -47,11 +47,11 @@ func (rt *RoutingTable) Update(service Service) {
 		if p, err := strconv.Atoi(port); p <= viper.GetInt("listeners.port_min") ||
 			p >= viper.GetInt("listeners.port_max") ||
 			err != nil {
-			log.WithFields(log.Fields{
-				"port":         port,
-				"service_name": service.Name(),
-				"upstream":     upstreamAddr,
-			}).Warn("Invalid listener port")
+			slog.Warn("Invalid listener port",
+				"port", port,
+				"service_name", service.Name(),
+				"upstream", upstreamAddr,
+			)
 			continue
 		}
 
@@ -65,12 +65,12 @@ func (rt *RoutingTable) Update(service Service) {
 			}
 		}
 		if !labelValid {
-			log.WithFields(log.Fields{
-				"label":             label,
-				"allowed_listeners": allowedListeners,
-				"service_name":      service.Name(),
-				"upstream":          upstreamAddr,
-			}).Warn("Invalid listener label")
+			slog.Warn("Invalid listener label",
+				"label", label,
+				"allowed_listeners", allowedListeners,
+				"service_name", service.Name(),
+				"upstream", upstreamAddr,
+			)
 			continue
 		}
 

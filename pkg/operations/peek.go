@@ -1,9 +1,8 @@
 package operations
 
 import (
+	"log/slog"
 	"net"
-
-	log "github.com/sirupsen/logrus"
 
 	"dill/pkg/proxy"
 )
@@ -11,14 +10,14 @@ import (
 func Peek(addr string) {
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
-		log.WithField("error", err).Error("Failed to start Peek")
+		slog.Error("Failed to start Peek", "error", err)
 		return
 	}
-	log.WithField("address", addr).Info("Starting Peek")
+	slog.Info("Starting Peek", "address", addr)
 	for {
 		c, err := l.Accept()
 		if err != nil {
-			log.WithField("error", err).Warning("Failed to accept a connection")
+			slog.Warn("Failed to accept a connection", "error", err)
 			continue
 		}
 

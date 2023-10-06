@@ -1,10 +1,10 @@
 package main
 
 import (
+	"log/slog"
 	"os"
 	"runtime"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
 	"dill/pkg/operations"
@@ -22,10 +22,10 @@ func init() {
 }
 
 func main() {
-	log.WithField("version", version).Info("Starting dill")
+	slog.Info("Starting dill", "version", version)
 
 	procs := viper.GetInt("runtime.gomaxprocs")
-	log.WithField("count", procs).Info("Setting GOMAXPROCS")
+	slog.Info("Setting GOMAXPROCS", "count", procs)
 	runtime.GOMAXPROCS(procs)
 
 	l := viper.GetString("peek.listener")
@@ -37,9 +37,10 @@ func main() {
 
 	name, monitor, err := routing.GetRoutingMonitor()
 	if err != nil {
-		log.WithError(err).Fatal("Failed to setup routing provider")
+		slog.Error("Failed to setup routing provider", "error", err)
+		os.Exit(1)
 	}
-	log.WithField("provider", name).Info("Starting routing provider")
+	slog.Info("Starting routing provider", "provider", name)
 	go monitor(c)
 
 	proxy.ControlRoutes(c, sch)

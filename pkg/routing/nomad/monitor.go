@@ -1,9 +1,10 @@
 package nomad
 
 import (
+	"log/slog"
+	"os"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
 	"dill/pkg/proxy"
@@ -18,7 +19,8 @@ func MonitorServices(c chan<- *proxy.RoutingTable) {
 
 	nomadClient, err := newNomadClient(&cfg)
 	if err != nil {
-		log.WithError(err).Fatal("Invalid configuration of 'nomad' routing provider")
+		slog.Error("Invalid configuration of 'nomad' routing provider", "error", err)
+		os.Exit(1)
 	}
 
 	var index uint64
@@ -27,7 +29,7 @@ func MonitorServices(c chan<- *proxy.RoutingTable) {
 		rt := proxy.RoutingTable{Table: map[string][]proxy.Upstream{}, ConsulIndex: 0}
 		exposedServices, index, err = nomadClient.fetchExposedServices(index)
 		if err != nil {
-			log.WithError(err).Warning("Failed to query Nomad's service catalog")
+			slog.Warn("Failed to query Nomad's service catalog", "error", err)
 			time.Sleep(waitTime)
 			continue
 		}
@@ -35,7 +37,7 @@ func MonitorServices(c chan<- *proxy.RoutingTable) {
 		for _, s := range exposedServices {
 			details, err := nomadClient.fetchMatchingAllocations(s)
 			if err != nil {
-				log.WithField("name", s).WithError(err).Warning("Failed to fetch service details")
+				slog.Warn("Failed to fetch service details", "error", err, "name", s)
 				continue
 			}
 			for _, d := range details {

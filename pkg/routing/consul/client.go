@@ -1,9 +1,9 @@
 package consul
 
 import (
+	"log/slog"
 	"net/http"
-
-	log "github.com/sirupsen/logrus"
+	"os"
 
 	"golang.org/x/exp/slices"
 )
@@ -21,7 +21,8 @@ type consulConfig struct {
 
 func (c *consulConfig) Validate() {
 	if c.ConsistencyMode != "" && !slices.Contains(validConsistencyModes, c.ConsistencyMode) {
-		log.Fatal("Invalid Consul's consistency mode")
+		slog.Error("Invalid Consul's consistency mode")
+		os.Exit(1)
 	}
 }
 

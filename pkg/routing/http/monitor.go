@@ -5,11 +5,11 @@ import (
 	"crypto/sha256"
 	"errors"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"golang.org/x/exp/slices"
 
@@ -57,12 +57,12 @@ func MonitorServices(c chan<- *proxy.RoutingTable) {
 	for {
 		res, err := client.Get(e)
 		if err != nil {
-			log.WithError(err).Error("Failed to fetch routing configuration")
+			slog.Error("Failed to fetch routing configuration", "error", err)
 			time.Sleep(pollInterval)
 			continue
 		}
 		if !(res.StatusCode >= 200 && res.StatusCode <= 299) {
-			log.WithField("status_code", res.StatusCode).Error("Failed to fetch routing configuration")
+			slog.Error("Failed to fetch routing configuration", "status_code", res.StatusCode)
 			time.Sleep(pollInterval)
 			continue
 		}
@@ -74,7 +74,7 @@ func MonitorServices(c chan<- *proxy.RoutingTable) {
 		v := viper.New()
 		err = setConfigType(ct, v)
 		if err != nil {
-			log.WithField("content_type", ct).WithError(err).Error("Failed to set routing config type")
+			slog.Error("Failed to set routing config type", "content_type", ct, "error", err)
 			time.Sleep(pollInterval)
 			continue
 		}
@@ -89,7 +89,7 @@ func MonitorServices(c chan<- *proxy.RoutingTable) {
 
 		err = v.ReadConfig(bytes.NewBuffer(data))
 		if err != nil {
-			log.WithError(err).Info("Invalid routing config")
+			slog.Info("Invalid routing config", "error", err)
 		}
 
 		cfg := file.RoutingConfig{}
