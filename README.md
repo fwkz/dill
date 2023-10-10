@@ -118,6 +118,7 @@ If you are using a modern workload scheduler like Nomad or Kubernetes this idea 
 - [File](#file)
 - [HTTP](#http)
 - [Consul](#consul)
+- [Nomad](#nomad)
 
 You can help build the project and implement your routing provider based on your needs. If you need guidance, make sure to create Pull Request.
 #### File
