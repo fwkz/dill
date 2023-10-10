@@ -210,20 +210,35 @@ Example configuration of Nomad routing provider:
 
 ### Schema
 The routing configuration should be compliant with following schema: 
-```toml
-# /etc/dill/routing.toml
-[[services]]
-  name = "foo"
-  listener = "local:1234"
-  backends = ["127.0.0.1:5050"]
-  proxy = "socks5://user:pass@127.0.0.1:1080"  # optional
-
-[[services]]
-  name = "bar"
-  listener = "any:4444"
-  backends = ["127.0.0.1:4000", "127.0.0.1:4001"]
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "services": {
+      "type": "array",
+      "items":{
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "listener": {"type": "string"},
+          "backends": {"type": "array", "items": {"type": "string"}},
+          "proxy": {"type": "string"}
+        },
+        "required": [
+          "name",
+          "listener",
+          "backends"
+        ]
+      }
+    }
+  },
+  "required": [
+    "services"
+  ]
+}
 ```
-or equivalent in different format e.g. `JSON`, `YAML`:
+Example routing config:
 ```json
 {
   "services": [
@@ -245,6 +260,20 @@ or equivalent in different format e.g. `JSON`, `YAML`:
     }
   ]
 }
+```
+or equivalent in different format e.g. `TOML`, `YAML`:
+```toml
+# /etc/dill/routing.toml
+[[services]]
+  name = "foo"
+  listener = "local:1234"
+  backends = ["127.0.0.1:5050"]
+  proxy = "socks5://user:pass@127.0.0.1:1080"  # optional
+
+[[services]]
+  name = "bar"
+  listener = "any:4444"
+  backends = ["127.0.0.1:4000", "127.0.0.1:4001"]
 ```
 ```yaml
 services:
