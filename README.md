@@ -129,7 +129,7 @@ Now, imagine you deploy a new service (`bar`) that needs to be exposed on port `
 ```toml
 # /etc/dill/routing.toml
 [[services]]
-  name = "foo" # Renamed from "foobar" for clarity, adjust if needed
+  name = "foo"
   listener = "any:1234"
   # Updated backend list for foo
   backends = ["192.168.10.1:5050", "192.168.10.2:4050"]
