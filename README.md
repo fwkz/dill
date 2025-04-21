@@ -1,7 +1,8 @@
 # dill
-Cloud ready L4 TCP proxy with first-class support for dynamic listeners.
 
-Exposing dynamic backends on the static frontend ports is the bread-and-butter of any modern proxy. Load balancing multiple dynamic backends from one ingress point using on-demand opened ports is something that, for a good reason as it might poise certain security concerns, is not that simple. But when you exactly know what you are doing you are pretty much on your own.
+`dill` is an L4 TCP proxy and load balancer specifically designed for dynamic, cloud-native environments. Its core strength lies in **dynamic listener management**. Unlike traditional proxies requiring predefined static listening ports in configuration files, `dill` automatically opens listening ports on the host based on configuration discovered through dynamic providers (like [Consul](#consul), [Nomad](#nomad), [HTTP](#http), or watched [Files](#file)). This enables effortless exposure of backend services on demand, eliminating the need for manual proxy reconfiguration and restarts as your services scale or change.
+
+Ready to see how simple dynamic TCP proxying can be? Jump into the [Getting Started](#getting-started) section to give `dill` a try!
 
 ### How `dill` differs from classic proxies?
 
