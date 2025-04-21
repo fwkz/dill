@@ -3,7 +3,7 @@ Cloud ready L4 TCP proxy with first-class support for dynamic listeners.
 
 Exposing dynamic backends on the static frontend ports is the bread-and-butter of any modern proxy. Load balancing multiple dynamic backends from one ingress point using on-demand opened ports is something that, for a good reason as it might poise certain security concerns, is not that simple. But when you exactly know what you are doing you are pretty much on your own.
 
-## How `dill` differs from classic proxies?
+### How `dill` differs from classic proxies?
 
 Traditional L4 proxies and load balancers often require operators to pre-define the complete set of listening ports in static configuration files. Exposing a new service on a previously unused port typically involves manually updating this configuration and reloading or restarting the proxy instance. `dill` fundamentally differs by embracing dynamic listener management. Instead of static declarations, `dill` discovers the required listeners (IP addresses and ports) through its configured [Routing Providers](#providers) (like Consul, Nomad, or even a watched file). This allows `dill` to open and close frontend listening ports on-demand as backend services appear and disappear, offering greater agility and automation, especially in dynamic, service-oriented environments where manual port management becomes a significant operational burden.
 
@@ -92,7 +92,16 @@ First, you need to tell `dill` how to discover your services. We'll start with t
   path = "/etc/dill/routing.toml"
   # Automatically reload routing when the file changes
   watch = true
+
+# Define which listener labels map to which IP addresses
+[listeners.allowed]
+  # By default, 'local' maps to localhost and 'any' maps to all interfaces
+  local = "127.0.0.1"
+  any = "0.0.0.0"
+  # You could add more, e.g., internal = "192.168.1.10"
 ```
+
+The `listeners.allowed` map in your main `dill` configuration (`config.toml` in this case) defines labels (like `local`, `any`) and maps them to specific IP addresses that `dill` is allowed to bind to. This gives you control over which network interfaces services can be exposed on.
 
 Now, define your initial service(s) in the routing file:
 
@@ -100,7 +109,8 @@ Now, define your initial service(s) in the routing file:
 # /etc/dill/routing.toml
 [[services]]
   name = "foo"
-  # Request dill to listen on port 1234 (on any interface allowed)
+  # Request dill to listen on port 1234 using the 'any' listener label.
+  # Based on the default config above, 'any' means 0.0.0.0 (all interfaces).
   listener = "any:1234"
   backends = ["192.168.10.1:5050"]
 ```
@@ -111,7 +121,7 @@ Run `dill`:
 $ dill -config /etc/dill/config.toml
 ```
 
-And that's it! Based *solely* on the `routing.toml` definition, `dill` will **dynamically open port 1234** on the addresses associated with the `any` listener (typically `0.0.0.0`, see [`listeners.allowed`](#listenersallowed-map)) and start proxying traffic to `192.168.10.1:5050`.
+And that's it! Based *solely* on the `routing.toml` definition, `dill` looks up the `any` label in its `listeners.allowed` map, finds it corresponds to `0.0.0.0`, and **dynamically opens port 1234** on `0.0.0.0`. It then starts proxying traffic arriving on that port to `192.168.10.1:5050`.
 
 Now, imagine you deploy a new service (`bar`) that needs to be exposed on port `4321`. With a traditional proxy, you might need to modify the main proxy configuration and reload it. With `dill`, you simply update the routing source:
 
@@ -125,14 +135,15 @@ Now, imagine you deploy a new service (`bar`) that needs to be exposed on port `
 
 [[services]]
   name = "bar"
-  # Request dill to listen on a *new* port: 4321
+  # Request dill to listen on a *new* port: 4321, also on the 'any' (0.0.0.0) interface.
   listener = "any:4321"
   backends = ["192.168.10.3:4444"]
 ```
 
-Because `watch = true` was set, `dill` detects the change in `/etc/dill/routing.toml`. It automatically applies the necessary modifications: it updates the backends for the `foo` service and, crucially, **dynamically starts listening on the new port 4321** to route traffic to the `bar` service. No proxy restarts or manual configuration changes are needed to expose the new port.
+Because `watch = true` was set, `dill` detects the change in `/etc/dill/routing.toml`. It automatically applies the necessary modifications: it updates the backends for the `foo` service and, crucially, **dynamically starts listening on the new port 4321** (using the IP address mapped to `any`, which is `0.0.0.0`) to route traffic to the `bar` service. No proxy restarts or manual configuration changes are needed to expose the new port.
 
-This dynamic listener capability becomes incredibly powerful when combined with service discovery systems like [Consul](#consul) or [Nomad](#nomad). Services can register themselves and specify their desired listener port via tags, allowing `dill` to automatically expose them on the correct ports without any manual intervention.
+This dynamic listener capability becomes incredibly powerful when combined with service discovery systems like [Consul](#consul) or [Nomad](#nomad). Services can register themselves and specify their desired listener (e.g., `any:8080` or `local:9000`) via tags, allowing `dill` to automatically expose them on the correct interface and port without any manual intervention.
+
 ## Routing
 ### Providers
 `dill` offers multiple routing providers that allow you to apply live changes to the routing configuration.
